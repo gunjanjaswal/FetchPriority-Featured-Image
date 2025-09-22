@@ -1,0 +1,12 @@
+For the WordPress.org plugin repository, you need to create:
+
+1. icon-128x128.png - Used as the plugin icon
+2. icon-256x256.png - High-resolution version for retina displays
+
+These should be placed in this assets directory.
+
+Design tips:
+- Keep the design simple and recognizable
+- Use a consistent color scheme with your banner
+- Ensure it looks good at small sizes
+- Use a transparent background if appropriate

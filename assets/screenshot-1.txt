@@ -1,0 +1,8 @@
+This is a placeholder for screenshot-1.png
+
+For the actual plugin submission, you would need to create a screenshot showing the HTML source of a page with the fetchpriority="high" attribute added to a featured image.
+
+The screenshot should be:
+1. Named screenshot-1.png
+2. 1200px wide (height can vary)
+3. Placed in this assets directory

@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: FetchPriority Featured Image
- * Plugin URI: https://github.com/gunjanjaswal/FetchPriority-Featured-Image
+ * Plugin URI: https://wordpress.org/plugins/fetchpriority-featured-image/
  * Description: Adds fetchpriority="high" attribute to featured images to improve page loading performance.
  * Version: 1.0.0
  * Author: Gunjan Jaswaal
@@ -99,6 +99,41 @@ function fpfi_plugin_meta_links( $links, $file ) {
 add_filter( 'plugin_row_meta', 'fpfi_plugin_meta_links', 10, 2 );
 
 /**
+ * Enqueue admin scripts for dismissible notice.
+ */
+function fpfi_enqueue_admin_scripts( $hook ) {
+    // Only load on plugins page
+    if ( 'plugins.php' !== $hook ) {
+        return;
+    }
+    
+    // Check if notice has been dismissed
+    if ( get_option( 'fpfi_coffee_notice_dismissed' ) ) {
+        return;
+    }
+    
+    // Enqueue jQuery (already included in WordPress)
+    wp_enqueue_script( 'jquery' );
+    
+    // Add inline script for notice dismissal
+    $inline_script = '
+        jQuery(document).ready(function($) {
+            $(document).on("click", ".fpfi-coffee-notice .notice-dismiss", function() {
+                $.ajax({
+                    url: ajaxurl,
+                    data: {
+                        action: "fpfi_dismiss_coffee_notice"
+                    }
+                });
+            });
+        });
+    ';
+    
+    wp_add_inline_script( 'jquery', $inline_script );
+}
+add_action( 'admin_enqueue_scripts', 'fpfi_enqueue_admin_scripts' );
+
+/**
  * Display admin notice for Buy Me a Coffee.
  * Shows only once after plugin activation.
  */
@@ -131,18 +166,6 @@ function fpfi_admin_notice() {
             )
         ); ?></p>
     </div>
-    <script>
-        jQuery(document).ready(function($) {
-            $(document).on('click', '.fpfi-coffee-notice .notice-dismiss', function() {
-                $.ajax({
-                    url: ajaxurl,
-                    data: {
-                        action: 'fpfi_dismiss_coffee_notice'
-                    }
-                });
-            });
-        });
-    </script>
     <?php
     
     // Mark notice as shown

@@ -73,11 +73,12 @@ You can view the HTML source of your pages and look for `fetchpriority="high"` i
 == Changelog ==
 
 = 1.1.0 =
-* Updated for WordPress 6.7 compatibility
+* Updated for WordPress 6.9 compatibility
 * Improved security with nonce verification for AJAX calls
 * Updated minimum PHP requirement to 7.4
 * Enhanced code quality and WordPress coding standards compliance
 * Added proper input sanitization and escaping
+* Aligns with WordPress 6.9's frontend performance improvements
 
 = 1.0.0 =
 * Initial release
@@ -85,7 +86,7 @@ You can view the HTML source of your pages and look for `fetchpriority="high"` i
 == Upgrade Notice ==
 
 = 1.1.0 =
-Compatibility update for WordPress 6.7 with security improvements. Requires PHP 7.4 or higher.
+Compatibility update for WordPress 6.9 with security improvements. Requires PHP 7.4 or higher.
 
 = 1.0.0 =
 Initial release of the plugin.

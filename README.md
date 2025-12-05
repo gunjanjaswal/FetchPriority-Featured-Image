@@ -110,11 +110,12 @@ If you find this plugin useful, consider [buying me a coffee](https://www.buymea
 ## Changelog
 
 ### Version 1.1.0
-* Updated for WordPress 6.7 compatibility
+* Updated for WordPress 6.9 compatibility
 * Improved security with nonce verification for AJAX calls
 * Updated minimum PHP requirement to 7.4
 * Enhanced code quality and WordPress coding standards compliance
 * Added proper input sanitization and escaping
+* Aligns with WordPress 6.9's frontend performance improvements
 
 ### Version 1.0.0
 * Initial release

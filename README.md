@@ -107,6 +107,18 @@ Contributions are welcome! Feel free to:
 
 If you find this plugin useful, consider [buying me a coffee](https://www.buymeacoffee.com/gunjanjaswal) to support the development.
 
+## Changelog
+
+### Version 1.1.0
+* Updated for WordPress 6.7 compatibility
+* Improved security with nonce verification for AJAX calls
+* Updated minimum PHP requirement to 7.4
+* Enhanced code quality and WordPress coding standards compliance
+* Added proper input sanitization and escaping
+
+### Version 1.0.0
+* Initial release
+
 ## License
 
 This project is licensed under the GPL v2 or later - see the [LICENSE](LICENSE) file for details.

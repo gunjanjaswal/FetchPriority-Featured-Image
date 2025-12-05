@@ -3,7 +3,7 @@
  * Plugin Name: FetchPriority Featured Image
  * Plugin URI: https://wordpress.org/plugins/fetchpriority-featured-image/
  * Description: Adds fetchpriority="high" attribute to featured images to improve page loading performance.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Gunjan Jaswaal
  * Author URI: https://gunjanjaswal.me
  * License: GPL v2 or later
@@ -11,8 +11,8 @@
  * Text Domain: fetchpriority-featured-image
  * Domain Path: /languages
  * Requires at least: 5.0
- * Requires PHP: 7.0
- * Tested up to: 6.8
+ * Requires PHP: 7.4
+ * Tested up to: 6.9
  */
 
 // If this file is called directly, abort.
@@ -23,7 +23,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Current plugin version.
  */
-define( 'FETCHPRIORITY_FEATURED_IMAGE_VERSION', '1.0.0' );
+define( 'FETCHPRIORITY_FEATURED_IMAGE_VERSION', '1.1.0' );
 
 /**
  * Plugin activation hook.
@@ -115,19 +115,23 @@ function fpfi_enqueue_admin_scripts( $hook ) {
     // Enqueue jQuery (already included in WordPress)
     wp_enqueue_script( 'jquery' );
     
-    // Add inline script for notice dismissal
-    $inline_script = '
+    // Add inline script for notice dismissal with nonce for security
+    $inline_script = sprintf(
+        '
         jQuery(document).ready(function($) {
             $(document).on("click", ".fpfi-coffee-notice .notice-dismiss", function() {
                 $.ajax({
                     url: ajaxurl,
                     data: {
-                        action: "fpfi_dismiss_coffee_notice"
+                        action: "fpfi_dismiss_coffee_notice",
+                        nonce: "%s"
                     }
                 });
             });
         });
-    ';
+        ',
+        wp_create_nonce( 'fpfi_dismiss_notice' )
+    );
     
     wp_add_inline_script( 'jquery', $inline_script );
 }
@@ -177,6 +181,11 @@ add_action( 'admin_notices', 'fpfi_admin_notice' );
  * AJAX handler to dismiss the coffee notice.
  */
 function fpfi_dismiss_coffee_notice() {
+    // Verify nonce for security
+    if ( ! isset( $_REQUEST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST['nonce'] ) ), 'fpfi_dismiss_notice' ) ) {
+        wp_die( esc_html__( 'Security check failed', 'fetchpriority-featured-image' ), 403 );
+    }
+    
     update_option( 'fpfi_coffee_notice_dismissed', true );
     wp_die();
 }

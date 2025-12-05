@@ -4,9 +4,9 @@ Contributors: gunjanjaswal
 Donate link: https://www.buymeacoffee.com/gunjanjaswal
 Tags: performance, images, featured-image, web-vitals, fetchpriority
 Requires at least: 5.0
-Tested up to: 6.8
-Stable tag: 1.0.0
-Requires PHP: 7.0
+Tested up to: 6.9
+Stable tag: 1.1.0
+Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -72,10 +72,20 @@ You can view the HTML source of your pages and look for `fetchpriority="high"` i
 
 == Changelog ==
 
+= 1.1.0 =
+* Updated for WordPress 6.7 compatibility
+* Improved security with nonce verification for AJAX calls
+* Updated minimum PHP requirement to 7.4
+* Enhanced code quality and WordPress coding standards compliance
+* Added proper input sanitization and escaping
+
 = 1.0.0 =
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Compatibility update for WordPress 6.7 with security improvements. Requires PHP 7.4 or higher.
 
 = 1.0.0 =
 Initial release of the plugin.

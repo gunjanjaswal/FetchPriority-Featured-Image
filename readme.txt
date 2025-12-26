@@ -5,7 +5,7 @@ Donate link: https://www.buymeacoffee.com/gunjanjaswal
 Tags: performance, images, featured-image, web-vitals, fetchpriority
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -24,7 +24,7 @@ FetchPriority Featured Image is a lightweight plugin that automatically adds the
   * On the first post of archive pages, blog home, and search results
 * Zero configuration required - install and activate
 * No settings page to keep things simple and lightweight
-* Compatible with most WordPress themes
+* Compatible with most WordPress themes including Divi, Elementor, and standard themes
 
 = Why Use FetchPriority? =
 
@@ -52,7 +52,7 @@ No, this plugin only adds an HTML attribute to the image tag. It doesn't modify 
 
 = Will this work with my theme? =
 
-This plugin should work with any theme that uses WordPress's standard featured image functions. If your theme uses custom code to display featured images, the plugin might not affect those images.
+Yes! This plugin works with any theme that uses WordPress's standard featured image functions. It also includes specific support for popular page builders like Divi and Elementor that use custom image rendering methods.
 
 = Do I need to configure anything? =
 
@@ -72,6 +72,13 @@ You can view the HTML source of your pages and look for `fetchpriority="high"` i
 
 == Changelog ==
 
+= 1.2.0 =
+* Added support for Divi theme and Elementor page builder
+* Implemented `wp_get_attachment_image_attributes` filter for broader compatibility
+* Added content filter fallback to catch custom image implementations
+* Improved image detection across different theme rendering methods
+* Enhanced compatibility with themes that bypass standard WordPress image functions
+
 = 1.1.0 =
 * Updated for WordPress 6.9 compatibility
 * Improved security with nonce verification for AJAX calls
@@ -84,6 +91,9 @@ You can view the HTML source of your pages and look for `fetchpriority="high"` i
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+Major compatibility update! Now works with Divi, Elementor, and other page builders. Highly recommended for all users.
 
 = 1.1.0 =
 Compatibility update for WordPress 6.9 with security improvements. Requires PHP 7.4 or higher.

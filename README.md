@@ -19,7 +19,7 @@ FetchPriority Featured Image is a simple plugin that helps improve your website'
   * On the first post of archive pages, blog home, and search results
 * Zero configuration required - install and activate
 * No settings page to keep things simple and lightweight
-* Compatible with most WordPress themes
+* Compatible with most WordPress themes including Divi, Elementor, and standard themes
 
 ## Installation
 
@@ -43,7 +43,7 @@ No, this plugin only adds an HTML attribute to the image tag. It doesn't modify 
 
 ### Will this work with my theme?
 
-This plugin should work with any theme that uses WordPress's standard featured image functions. If your theme uses custom code to display featured images, the plugin might not affect those images.
+Yes! This plugin works with any theme that uses WordPress's standard featured image functions. It also includes specific support for popular page builders like Divi and Elementor that use custom image rendering methods.
 
 ### Do I need to configure anything?
 
@@ -65,7 +65,13 @@ Created by [Gunjan Jaswaal](https://gunjanjaswal.me)
 
 ### How It Works
 
-The plugin uses WordPress's `post_thumbnail_html` filter to add the `fetchpriority="high"` attribute to the HTML of featured images. It intelligently applies this attribute only to:
+The plugin uses multiple WordPress filters to ensure broad compatibility:
+
+1. **`post_thumbnail_html`** - Catches featured images rendered via `the_post_thumbnail()`
+2. **`wp_get_attachment_image_attributes`** - Catches images rendered via `wp_get_attachment_image()` (used by Divi and other page builders)
+3. **`the_content`** - Fallback filter to catch any remaining images in post content
+
+It intelligently applies the `fetchpriority="high"` attribute only to:
 
 - Featured images on single posts and pages
 - The first post's featured image on archive pages, blog home, and search results
@@ -108,6 +114,13 @@ Contributions are welcome! Feel free to:
 If you find this plugin useful, consider [buying me a coffee](https://www.buymeacoffee.com/gunjanjaswal) to support the development.
 
 ## Changelog
+
+### Version 1.2.0
+* Added support for Divi theme and other page builders
+* Implemented `wp_get_attachment_image_attributes` filter for broader compatibility
+* Added content filter fallback to catch custom image implementations
+* Improved image detection across different theme rendering methods
+* Enhanced compatibility with themes that bypass standard WordPress image functions
 
 ### Version 1.1.0
 * Updated for WordPress 6.9 compatibility

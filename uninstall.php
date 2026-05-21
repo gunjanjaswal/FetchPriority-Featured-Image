@@ -12,3 +12,4 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 
 // Clean up plugin options
 delete_option( 'fpfi_coffee_notice_dismissed' );
+delete_option( 'fpfi_settings' );

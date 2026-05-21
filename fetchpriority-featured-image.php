@@ -685,6 +685,7 @@ add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'fpfi_plugin_acti
 function fpfi_plugin_meta_links($links, $file)
 {
     if (plugin_basename(__FILE__) === $file) {
+        $links[] = '<a href="https://wordpress.org/support/plugin/fetchpriority-featured-image/" target="_blank">' . __('Plugin Support', 'fetchpriority-featured-image') . '</a>';
         $links[] = '<a href="mailto:hello@gunjanjaswal.me">' . __('Contact Developer', 'fetchpriority-featured-image') . '</a>';
     }
     return $links;

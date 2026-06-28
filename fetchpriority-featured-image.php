@@ -2,8 +2,8 @@
 /**
  * Plugin Name: FetchPriority Featured Image
  * Plugin URI: https://wordpress.org/plugins/fetchpriority-featured-image/
- * Description: Adds fetchpriority="high" to hero/featured images and (optionally) fetchpriority="low" to below-fold images. Includes hero <link rel="preload"> with AVIF/WebP detection, theme presets, and an admin-bar debug badge.
- * Version: 1.3.0
+ * Description: Self-learning LCP optimizer. Measures the real Largest Contentful Paint element from your visitors and auto-applies fetchpriority="high" + preload to it (foreground or CSS background), with a visual LCP picker, per-template control, AVIF/WebP detection, and a built-in Core Web Vitals before/after report.
+ * Version: 1.4.0
  * Author: Gunjan Jaswal
  * Author URI: https://gunjanjaswal.me
  * License: GPL v2 or later
@@ -19,7 +19,17 @@ if (!defined('WPINC')) {
     die;
 }
 
-define('FETCHPRIORITY_FEATURED_IMAGE_VERSION', '1.3.0');
+define('FETCHPRIORITY_FEATURED_IMAGE_VERSION', '1.4.0');
+define('FPFI_PLUGIN_FILE', __FILE__);
+
+/* -------------------------------------------------------------------------
+ * Module includes
+ * ---------------------------------------------------------------------- */
+require_once plugin_dir_path(__FILE__) . 'includes/lcp-store.php';
+require_once plugin_dir_path(__FILE__) . 'includes/lcp-learning.php';
+require_once plugin_dir_path(__FILE__) . 'includes/crux.php';
+require_once plugin_dir_path(__FILE__) . 'includes/psi.php';
+require_once plugin_dir_path(__FILE__) . 'includes/picker.php';
 
 /**
  * Plugin activation hook.
@@ -53,6 +63,13 @@ function fpfi_default_settings()
         'exclude_avatars'              => 1,
         // Theme preset
         'theme_preset'                 => 'auto',
+        // Smart LCP (self-learning)
+        'enable_lcp_learning'          => 1,
+        'lcp_sample_rate'              => 20,
+        'enable_bg_preload'            => 1,
+        'enable_loading_optim'         => 1,
+        // Core Web Vitals (CrUX)
+        'crux_api_key'                 => '',
         // Debug
         'enable_debug_badge'           => 0,
     );
@@ -74,12 +91,20 @@ function fpfi_sanitize_settings($input)
         'enable_singular', 'enable_home', 'enable_archive', 'enable_search',
         'enable_preload', 'enable_modern_format_preload',
         'enable_low_below_fold', 'exclude_avatars', 'enable_debug_badge',
+        'enable_lcp_learning', 'enable_bg_preload', 'enable_loading_optim',
     );
     foreach ($bool_keys as $key) {
         $clean[$key] = !empty($input[$key]) ? 1 : 0;
     }
     $first_n = isset($input['first_n_on_archive']) ? (int) $input['first_n_on_archive'] : 1;
     $clean['first_n_on_archive'] = max(1, min(20, $first_n));
+
+    $rate = isset($input['lcp_sample_rate']) ? (int) $input['lcp_sample_rate'] : 20;
+    $clean['lcp_sample_rate'] = max(1, min(100, $rate));
+
+    $clean['crux_api_key'] = isset($input['crux_api_key'])
+        ? sanitize_text_field($input['crux_api_key'])
+        : '';
 
     $allowed_presets = array('auto', 'astra', 'generatepress', 'kadence', 'divi', 'elementor', 'none');
     $preset = isset($input['theme_preset']) ? (string) $input['theme_preset'] : 'auto';
@@ -218,6 +243,10 @@ function fpfi_html_is_gravatar($html)
 function fpfi_context_enabled()
 {
     $s = fpfi_get_settings();
+    // Per-template kill switch (Smart LCP "Off" mode).
+    if (fpfi_template_is_off()) {
+        return false;
+    }
     if (is_singular()) {
         return !empty($s['enable_singular']);
     }
@@ -262,6 +291,46 @@ function fpfi_decide_priority()
     return !empty($s['enable_low_below_fold']) ? 'low' : null;
 }
 
+/**
+ * Force a loading attribute on an <img> blob (eager for LCP, lazy for below-fold).
+ *
+ * @param string $html  Image HTML.
+ * @param string $value eager|lazy
+ * @return string
+ */
+function fpfi_set_loading_attr($html, $value)
+{
+    if (preg_match('/\sloading\s*=\s*("|\').*?\1/i', $html)) {
+        return preg_replace('/\sloading\s*=\s*("|\').*?\1/i', ' loading="' . $value . '"', $html, 1);
+    }
+    return preg_replace('/<img\b/i', '<img loading="' . $value . '"', $html, 1);
+}
+
+/**
+ * Apply loading optimization to an image given its resolved priority.
+ *
+ * high -> eager (and drop any lazy that would block the LCP);
+ * low  -> lazy.
+ *
+ * @param string $html
+ * @param string $priority high|low
+ * @return string
+ */
+function fpfi_apply_loading_optim($html, $priority)
+{
+    $s = fpfi_get_settings();
+    if (empty($s['enable_loading_optim'])) {
+        return $html;
+    }
+    if ($priority === 'high') {
+        return fpfi_set_loading_attr($html, 'eager');
+    }
+    if ($priority === 'low') {
+        return fpfi_set_loading_attr($html, 'lazy');
+    }
+    return $html;
+}
+
 function fpfi_record_priority_applied($priority)
 {
     if ($priority === 'high') {
@@ -301,12 +370,18 @@ function fpfi_add_fetchpriority_to_featured_image($html, $post_id, $post_thumbna
         return $html;
     }
 
-    $priority = fpfi_decide_priority();
+    // Measured/manual LCP wins: force high regardless of budget.
+    if (fpfi_context_enabled() && (fpfi_lcp_matches_id($post_thumbnail_id) || fpfi_lcp_matches_html($html))) {
+        $priority = 'high';
+    } else {
+        $priority = fpfi_decide_priority();
+    }
     if ($priority === null) {
         return $html;
     }
 
     $html = str_replace('<img ', '<img fetchpriority="' . esc_attr($priority) . '" ', $html);
+    $html = fpfi_apply_loading_optim($html, $priority);
     fpfi_record_priority_applied($priority);
 
     return $html;
@@ -322,12 +397,27 @@ function fpfi_add_fetchpriority_to_attachment_attributes($attr, $attachment, $si
         return $attr;
     }
 
-    $priority = fpfi_decide_priority();
+    $s = fpfi_get_settings();
+    $att_id = is_object($attachment) && isset($attachment->ID) ? (int) $attachment->ID : 0;
+    if (fpfi_context_enabled() && $att_id && fpfi_lcp_matches_id($att_id)) {
+        $priority = 'high';
+    } else {
+        $priority = fpfi_decide_priority();
+    }
     if ($priority === null) {
         return $attr;
     }
 
     $attr['fetchpriority'] = $priority;
+
+    if (!empty($s['enable_loading_optim'])) {
+        if ($priority === 'high') {
+            $attr['loading'] = 'eager';
+        } elseif ($priority === 'low') {
+            $attr['loading'] = 'lazy';
+        }
+    }
+
     fpfi_record_priority_applied($priority);
 
     return $attr;
@@ -353,13 +443,18 @@ function fpfi_add_fetchpriority_to_content($content)
                 return $img;
             }
 
-            $priority = fpfi_decide_priority();
+            if (fpfi_lcp_matches_html($img)) {
+                $priority = 'high';
+            } else {
+                $priority = fpfi_decide_priority();
+            }
             if ($priority === null) {
                 return $img;
             }
 
             fpfi_record_priority_applied($priority);
-            return str_replace('<img ', '<img fetchpriority="' . esc_attr($priority) . '" ', $img);
+            $img = str_replace('<img ', '<img fetchpriority="' . esc_attr($priority) . '" ', $img);
+            return fpfi_apply_loading_optim($img, $priority);
         },
         $content
     );
@@ -374,6 +469,7 @@ function fpfi_reset_request_flags()
     unset($GLOBALS['fpfi_archive_post_index']);
     unset($GLOBALS['fpfi_tagged_count']);
     unset($GLOBALS['fpfi_high_count']);
+    unset($GLOBALS['fpfi_lcp_preloaded']);
 }
 add_action('template_redirect', 'fpfi_reset_request_flags');
 
@@ -431,6 +527,11 @@ function fpfi_get_modern_format_variants($attachment_id)
 function fpfi_preload_featured_image()
 {
     if (!is_singular()) {
+        return;
+    }
+
+    // The measured/manual LCP preload already fired for this request.
+    if (!empty($GLOBALS['fpfi_lcp_preloaded'])) {
         return;
     }
 
@@ -556,118 +657,564 @@ function fpfi_render_settings_page()
         'none'          => __('Generic (no theme extras)', 'fetchpriority-featured-image'),
     );
     ?>
-    <div class="wrap">
-        <h1><?php esc_html_e('FetchPriority Featured Image', 'fetchpriority-featured-image'); ?></h1>
-        <p><?php esc_html_e('Control where the fetchpriority attribute is added and enable optional preload + debug helpers.', 'fetchpriority-featured-image'); ?></p>
+    <div class="wrap fpfi-admin">
+
+        <div class="fpfi-header">
+            <h1>
+                <span class="dashicons dashicons-superhero"></span>
+                <?php esc_html_e('FetchPriority Featured Image', 'fetchpriority-featured-image'); ?>
+                <span class="fpfi-version-pill">v<?php echo esc_html(FETCHPRIORITY_FEATURED_IMAGE_VERSION); ?></span>
+            </h1>
+            <p><?php esc_html_e('Self-learning LCP optimizer — it measures the real Largest Contentful Paint element from your visitors and automatically prioritises it. No guessing.', 'fetchpriority-featured-image'); ?></p>
+            <div class="fpfi-header-links">
+                <a href="https://ko-fi.com/gunjanjaswal" target="_blank"><span class="dashicons dashicons-coffee"></span><?php esc_html_e('Support on Ko-fi', 'fetchpriority-featured-image'); ?></a>
+                <a href="https://github.com/gunjanjaswal/FetchPriority-Featured-Image" target="_blank"><span class="dashicons dashicons-editor-code"></span><?php esc_html_e('GitHub', 'fetchpriority-featured-image'); ?></a>
+                <a href="https://wordpress.org/support/plugin/fetchpriority-featured-image/" target="_blank"><span class="dashicons dashicons-sos"></span><?php esc_html_e('Support', 'fetchpriority-featured-image'); ?></a>
+            </div>
+        </div>
+
+        <nav class="fpfi-tabs">
+            <button type="button" class="fpfi-tab is-active" data-tab="smart"><span class="dashicons dashicons-chart-line"></span><?php esc_html_e('Smart LCP', 'fetchpriority-featured-image'); ?></button>
+            <button type="button" class="fpfi-tab" data-tab="targeting"><span class="dashicons dashicons-filter"></span><?php esc_html_e('Targeting', 'fetchpriority-featured-image'); ?></button>
+            <button type="button" class="fpfi-tab" data-tab="preload"><span class="dashicons dashicons-performance"></span><?php esc_html_e('Preload', 'fetchpriority-featured-image'); ?></button>
+            <button type="button" class="fpfi-tab" data-tab="diagnostics"><span class="dashicons dashicons-chart-area"></span><?php esc_html_e('Diagnostics', 'fetchpriority-featured-image'); ?></button>
+        </nav>
+
         <form method="post" action="options.php">
             <?php settings_fields('fpfi_settings_group'); ?>
 
-            <h2><?php esc_html_e('Contexts', 'fetchpriority-featured-image'); ?></h2>
-            <table class="form-table" role="presentation">
-                <tr>
-                    <th scope="row"><?php esc_html_e('Apply on', 'fetchpriority-featured-image'); ?></th>
-                    <td>
-                        <fieldset>
-                            <label><input type="checkbox" name="fpfi_settings[enable_singular]" value="1" <?php checked($s['enable_singular']); ?>> <?php esc_html_e('Single posts & pages', 'fetchpriority-featured-image'); ?></label><br>
-                            <label><input type="checkbox" name="fpfi_settings[enable_home]" value="1" <?php checked($s['enable_home']); ?>> <?php esc_html_e('Blog home', 'fetchpriority-featured-image'); ?></label><br>
-                            <label><input type="checkbox" name="fpfi_settings[enable_archive]" value="1" <?php checked($s['enable_archive']); ?>> <?php esc_html_e('Archive pages (category, tag, author, date, CPT)', 'fetchpriority-featured-image'); ?></label><br>
-                            <label><input type="checkbox" name="fpfi_settings[enable_search]" value="1" <?php checked($s['enable_search']); ?>> <?php esc_html_e('Search results', 'fetchpriority-featured-image'); ?></label>
-                        </fieldset>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="fpfi_first_n"><?php esc_html_e('First N posts on archives', 'fetchpriority-featured-image'); ?></label></th>
-                    <td>
-                        <input type="number" id="fpfi_first_n" name="fpfi_settings[first_n_on_archive]" value="<?php echo esc_attr($s['first_n_on_archive']); ?>" min="1" max="20" class="small-text">
-                        <p class="description"><?php esc_html_e('How many posts at the top of an archive/blog/search loop get fetchpriority="high". Default: 1. Range: 1–20.', 'fetchpriority-featured-image'); ?></p>
-                    </td>
-                </tr>
-            </table>
+            <!-- =============== SMART LCP =============== -->
+            <div class="fpfi-panel is-active" data-panel="smart">
 
-            <h2><?php esc_html_e('Preload (hero featured image)', 'fetchpriority-featured-image'); ?></h2>
-            <table class="form-table" role="presentation">
-                <tr>
-                    <th scope="row"><?php esc_html_e('Preload featured image', 'fetchpriority-featured-image'); ?></th>
-                    <td>
-                        <label><input type="checkbox" name="fpfi_settings[enable_preload]" value="1" <?php checked($s['enable_preload']); ?>> <?php esc_html_e('Emit <link rel="preload" as="image"> in <head> on singular pages.', 'fetchpriority-featured-image'); ?></label>
-                        <p class="description"><?php esc_html_e('Strongest LCP signal. Only fires when a featured image exists.', 'fetchpriority-featured-image'); ?></p>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><?php esc_html_e('Modern format preload', 'fetchpriority-featured-image'); ?></th>
-                    <td>
-                        <label><input type="checkbox" name="fpfi_settings[enable_modern_format_preload]" value="1" <?php checked($s['enable_modern_format_preload']); ?>> <?php esc_html_e('Also preload AVIF/WebP variants when sibling files exist on disk.', 'fetchpriority-featured-image'); ?></label>
-                        <p class="description"><?php esc_html_e('Detects "file.avif" / "file.webp" or "file.jpg.avif" / "file.jpg.webp" siblings (works with ShortPixel, Imagify, Optimole, and similar). Browsers automatically pick the supported type.', 'fetchpriority-featured-image'); ?></p>
-                    </td>
-                </tr>
-            </table>
+                <div class="fpfi-card">
+                    <div class="fpfi-card-head">
+                        <span class="dashicons dashicons-superhero-alt"></span>
+                        <h2><?php esc_html_e('Self-learning LCP', 'fetchpriority-featured-image'); ?></h2>
+                        <span class="fpfi-card-sub"><?php esc_html_e('The headline feature', 'fetchpriority-featured-image'); ?></span>
+                    </div>
+                    <div class="fpfi-card-body">
+                        <table class="form-table" role="presentation">
+                            <tr>
+                                <th scope="row"><?php esc_html_e('Learn real LCP', 'fetchpriority-featured-image'); ?></th>
+                                <td>
+                                    <label><input type="checkbox" name="fpfi_settings[enable_lcp_learning]" value="1" <?php checked($s['enable_lcp_learning']); ?>> <?php esc_html_e('Measure the real Largest Contentful Paint element from visitors and auto-prioritise it.', 'fetchpriority-featured-image'); ?></label>
+                                    <p class="description"><?php esc_html_e('A tiny script reports the actual LCP image per template. Once enough samples are collected, the plugin preloads and tags that exact image (foreground or CSS background) instead of guessing — and self-corrects as your site changes.', 'fetchpriority-featured-image'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="fpfi_sample_rate"><?php esc_html_e('Sample rate', 'fetchpriority-featured-image'); ?></label></th>
+                                <td>
+                                    <input type="number" id="fpfi_sample_rate" name="fpfi_settings[lcp_sample_rate]" value="<?php echo esc_attr($s['lcp_sample_rate']); ?>" min="1" max="100" class="small-text"> %
+                                    <p class="description"><?php esc_html_e('Percentage of page views that load the measurement script. Lower = lighter; higher = faster learning. Default: 20%.', 'fetchpriority-featured-image'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><?php esc_html_e('Background-image preload', 'fetchpriority-featured-image'); ?></th>
+                                <td>
+                                    <label><input type="checkbox" name="fpfi_settings[enable_bg_preload]" value="1" <?php checked($s['enable_bg_preload']); ?>> <?php esc_html_e('Preload the hero when the LCP is a CSS background-image (sliders, hero sections).', 'fetchpriority-featured-image'); ?></label>
+                                    <p class="description"><?php esc_html_e('CSS background heroes are a blind spot for most performance plugins — the browser discovers them late. This preloads the measured/manual background URL.', 'fetchpriority-featured-image'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><?php esc_html_e('Loading optimization', 'fetchpriority-featured-image'); ?></th>
+                                <td>
+                                    <label><input type="checkbox" name="fpfi_settings[enable_loading_optim]" value="1" <?php checked($s['enable_loading_optim']); ?>> <?php esc_html_e('Force loading="eager" on the LCP image and loading="lazy" on below-fold images.', 'fetchpriority-featured-image'); ?></label>
+                                    <p class="description"><?php esc_html_e('Stops native lazy-loading from delaying your hero, and defers everything below it.', 'fetchpriority-featured-image'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><?php esc_html_e('Visual picker', 'fetchpriority-featured-image'); ?></th>
+                                <td>
+                                    <p class="description"><?php esc_html_e('Prefer to choose manually? On the front end, open the admin-bar menu and click "Pick LCP element", then click your hero image. It is saved as a manual override for that template.', 'fetchpriority-featured-image'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
 
-            <h2><?php esc_html_e('Below-fold priority', 'fetchpriority-featured-image'); ?></h2>
-            <table class="form-table" role="presentation">
-                <tr>
-                    <th scope="row"><?php esc_html_e('fetchpriority="low" below the fold', 'fetchpriority-featured-image'); ?></th>
-                    <td>
-                        <label><input type="checkbox" name="fpfi_settings[enable_low_below_fold]" value="1" <?php checked($s['enable_low_below_fold']); ?>> <?php esc_html_e('After the hero (or first-N posts on archives), tag remaining images with fetchpriority="low".', 'fetchpriority-featured-image'); ?></label>
-                        <p class="description"><?php esc_html_e('Tells the browser to defer below-fold work so the hero loads faster. Paired complement to the high tag.', 'fetchpriority-featured-image'); ?></p>
-                    </td>
-                </tr>
-            </table>
-
-            <h2><?php esc_html_e('Exclusions', 'fetchpriority-featured-image'); ?></h2>
-            <table class="form-table" role="presentation">
-                <tr>
-                    <th scope="row"><?php esc_html_e('Skip avatars', 'fetchpriority-featured-image'); ?></th>
-                    <td>
-                        <label><input type="checkbox" name="fpfi_settings[exclude_avatars]" value="1" <?php checked($s['exclude_avatars']); ?>> <?php esc_html_e('Never tag images with class "avatar"/"gravatar" or hosted on gravatar.com.', 'fetchpriority-featured-image'); ?></label>
-                        <p class="description"><?php esc_html_e('Author avatars are rarely LCP candidates and would waste the priority budget.', 'fetchpriority-featured-image'); ?></p>
-                    </td>
-                </tr>
-            </table>
-
-            <h2><?php esc_html_e('Theme preset', 'fetchpriority-featured-image'); ?></h2>
-            <table class="form-table" role="presentation">
-                <tr>
-                    <th scope="row"><label for="fpfi_theme_preset"><?php esc_html_e('Theme preset', 'fetchpriority-featured-image'); ?></label></th>
-                    <td>
-                        <select id="fpfi_theme_preset" name="fpfi_settings[theme_preset]">
-                            <?php foreach ($preset_labels as $val => $label) : ?>
-                                <option value="<?php echo esc_attr($val); ?>" <?php selected($s['theme_preset'], $val); ?>><?php echo esc_html($label); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <p class="description">
-                            <?php
-                            printf(
-                                /* translators: %s: detected theme key */
-                                esc_html__('Auto-detected: %s. Presets add theme-specific logo/header class exclusions so the priority budget is spent on the real hero image. Divi & Elementor already work out of the box via the attachment-attributes filter.', 'fetchpriority-featured-image'),
-                                '<code>' . esc_html($detected) . '</code>'
-                            );
-                            ?>
+                <div class="fpfi-card">
+                    <div class="fpfi-card-head">
+                        <span class="dashicons dashicons-images-alt2"></span>
+                        <h2><?php esc_html_e('Per-template LCP targets', 'fetchpriority-featured-image'); ?></h2>
+                    </div>
+                    <div class="fpfi-card-body">
+                        <p class="description"><?php esc_html_e('What the plugin will prioritise on each template it has seen. "Auto" uses a manual pick if set, else the learned LCP, else the featured-image guess.', 'fetchpriority-featured-image'); ?></p>
+                        <?php fpfi_render_lcp_table(); ?>
+                        <p>
+                            <button type="button" class="button" id="fpfi-lcp-reset"><?php esc_html_e('Clear learned data', 'fetchpriority-featured-image'); ?></button>
+                            <span id="fpfi-lcp-status" style="margin-left:8px;"></span>
                         </p>
-                    </td>
-                </tr>
-            </table>
+                    </div>
+                </div>
 
-            <h2><?php esc_html_e('Debug', 'fetchpriority-featured-image'); ?></h2>
-            <table class="form-table" role="presentation">
-                <tr>
-                    <th scope="row"><?php esc_html_e('Admin-bar badge', 'fetchpriority-featured-image'); ?></th>
-                    <td>
-                        <label><input type="checkbox" name="fpfi_settings[enable_debug_badge]" value="1" <?php checked($s['enable_debug_badge']); ?>> <?php esc_html_e('Show a badge on the front-end admin bar with tagged-image counts.', 'fetchpriority-featured-image'); ?></label>
-                        <p class="description"><?php esc_html_e('Visible only to users with the manage_options capability.', 'fetchpriority-featured-image'); ?></p>
-                    </td>
-                </tr>
-            </table>
+            </div>
 
-            <?php submit_button(); ?>
+            <!-- =============== TARGETING =============== -->
+            <div class="fpfi-panel" data-panel="targeting">
+
+                <div class="fpfi-card">
+                    <div class="fpfi-card-head">
+                        <span class="dashicons dashicons-visibility"></span>
+                        <h2><?php esc_html_e('Where to apply', 'fetchpriority-featured-image'); ?></h2>
+                    </div>
+                    <div class="fpfi-card-body">
+                        <table class="form-table" role="presentation">
+                            <tr>
+                                <th scope="row"><?php esc_html_e('Apply on', 'fetchpriority-featured-image'); ?></th>
+                                <td>
+                                    <fieldset>
+                                        <label><input type="checkbox" name="fpfi_settings[enable_singular]" value="1" <?php checked($s['enable_singular']); ?>> <?php esc_html_e('Single posts & pages', 'fetchpriority-featured-image'); ?></label>
+                                        <label><input type="checkbox" name="fpfi_settings[enable_home]" value="1" <?php checked($s['enable_home']); ?>> <?php esc_html_e('Blog home', 'fetchpriority-featured-image'); ?></label>
+                                        <label><input type="checkbox" name="fpfi_settings[enable_archive]" value="1" <?php checked($s['enable_archive']); ?>> <?php esc_html_e('Archive pages (category, tag, author, date, CPT)', 'fetchpriority-featured-image'); ?></label>
+                                        <label><input type="checkbox" name="fpfi_settings[enable_search]" value="1" <?php checked($s['enable_search']); ?>> <?php esc_html_e('Search results', 'fetchpriority-featured-image'); ?></label>
+                                    </fieldset>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="fpfi_first_n"><?php esc_html_e('First N posts on archives', 'fetchpriority-featured-image'); ?></label></th>
+                                <td>
+                                    <input type="number" id="fpfi_first_n" name="fpfi_settings[first_n_on_archive]" value="<?php echo esc_attr($s['first_n_on_archive']); ?>" min="1" max="20" class="small-text">
+                                    <p class="description"><?php esc_html_e('How many posts at the top of an archive/blog/search loop get fetchpriority="high". Default: 1. Range: 1–20.', 'fetchpriority-featured-image'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="fpfi-card">
+                    <div class="fpfi-card-head">
+                        <span class="dashicons dashicons-arrow-down-alt"></span>
+                        <h2><?php esc_html_e('Below-fold priority', 'fetchpriority-featured-image'); ?></h2>
+                    </div>
+                    <div class="fpfi-card-body">
+                        <table class="form-table" role="presentation">
+                            <tr>
+                                <th scope="row"><?php esc_html_e('fetchpriority="low" below the fold', 'fetchpriority-featured-image'); ?></th>
+                                <td>
+                                    <label><input type="checkbox" name="fpfi_settings[enable_low_below_fold]" value="1" <?php checked($s['enable_low_below_fold']); ?>> <?php esc_html_e('After the hero (or first-N posts on archives), tag remaining images with fetchpriority="low".', 'fetchpriority-featured-image'); ?></label>
+                                    <p class="description"><?php esc_html_e('Tells the browser to defer below-fold work so the hero loads faster. Paired complement to the high tag.', 'fetchpriority-featured-image'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="fpfi-card">
+                    <div class="fpfi-card-head">
+                        <span class="dashicons dashicons-dismiss"></span>
+                        <h2><?php esc_html_e('Exclusions', 'fetchpriority-featured-image'); ?></h2>
+                    </div>
+                    <div class="fpfi-card-body">
+                        <table class="form-table" role="presentation">
+                            <tr>
+                                <th scope="row"><?php esc_html_e('Skip avatars', 'fetchpriority-featured-image'); ?></th>
+                                <td>
+                                    <label><input type="checkbox" name="fpfi_settings[exclude_avatars]" value="1" <?php checked($s['exclude_avatars']); ?>> <?php esc_html_e('Never tag images with class "avatar"/"gravatar" or hosted on gravatar.com.', 'fetchpriority-featured-image'); ?></label>
+                                    <p class="description"><?php esc_html_e('Author avatars are rarely LCP candidates and would waste the priority budget.', 'fetchpriority-featured-image'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="fpfi-card">
+                    <div class="fpfi-card-head">
+                        <span class="dashicons dashicons-admin-appearance"></span>
+                        <h2><?php esc_html_e('Theme preset', 'fetchpriority-featured-image'); ?></h2>
+                        <span class="fpfi-card-sub"><?php
+                            /* translators: %s: detected theme key */
+                            printf(esc_html__('Detected: %s', 'fetchpriority-featured-image'), esc_html($detected)); ?></span>
+                    </div>
+                    <div class="fpfi-card-body">
+                        <table class="form-table" role="presentation">
+                            <tr>
+                                <th scope="row"><label for="fpfi_theme_preset"><?php esc_html_e('Theme preset', 'fetchpriority-featured-image'); ?></label></th>
+                                <td>
+                                    <select id="fpfi_theme_preset" name="fpfi_settings[theme_preset]">
+                                        <?php foreach ($preset_labels as $val => $label) : ?>
+                                            <option value="<?php echo esc_attr($val); ?>" <?php selected($s['theme_preset'], $val); ?>><?php echo esc_html($label); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <p class="description"><?php esc_html_e('Presets add theme-specific logo/header class exclusions so the priority budget is spent on the real hero image. Divi & Elementor already work out of the box.', 'fetchpriority-featured-image'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- =============== PRELOAD =============== -->
+            <div class="fpfi-panel" data-panel="preload">
+                <div class="fpfi-card">
+                    <div class="fpfi-card-head">
+                        <span class="dashicons dashicons-performance"></span>
+                        <h2><?php esc_html_e('Preload (hero featured image)', 'fetchpriority-featured-image'); ?></h2>
+                    </div>
+                    <div class="fpfi-card-body">
+                        <table class="form-table" role="presentation">
+                            <tr>
+                                <th scope="row"><?php esc_html_e('Preload featured image', 'fetchpriority-featured-image'); ?></th>
+                                <td>
+                                    <label><input type="checkbox" name="fpfi_settings[enable_preload]" value="1" <?php checked($s['enable_preload']); ?>> <?php esc_html_e('Emit <link rel="preload" as="image"> in <head> on singular pages.', 'fetchpriority-featured-image'); ?></label>
+                                    <p class="description"><?php esc_html_e('Strongest LCP signal. The learned/manual LCP is used when available, otherwise the featured image.', 'fetchpriority-featured-image'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><?php esc_html_e('Modern format preload', 'fetchpriority-featured-image'); ?></th>
+                                <td>
+                                    <label><input type="checkbox" name="fpfi_settings[enable_modern_format_preload]" value="1" <?php checked($s['enable_modern_format_preload']); ?>> <?php esc_html_e('Also preload AVIF/WebP variants when sibling files exist on disk.', 'fetchpriority-featured-image'); ?></label>
+                                    <p class="description"><?php esc_html_e('Detects "file.avif" / "file.webp" or "file.jpg.avif" / "file.jpg.webp" siblings (works with ShortPixel, Imagify, Optimole, and similar). Browsers automatically pick the supported type.', 'fetchpriority-featured-image'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =============== DIAGNOSTICS =============== -->
+            <div class="fpfi-panel" data-panel="diagnostics">
+
+                <div class="fpfi-card">
+                    <div class="fpfi-card-head">
+                        <span class="dashicons dashicons-admin-network"></span>
+                        <h2><?php esc_html_e('Google API key', 'fetchpriority-featured-image'); ?></h2>
+                    </div>
+                    <div class="fpfi-card-body">
+                        <table class="form-table" role="presentation">
+                            <tr>
+                                <th scope="row"><label for="fpfi_crux_key"><?php esc_html_e('CrUX / PSI API key', 'fetchpriority-featured-image'); ?></label></th>
+                                <td>
+                                    <input type="text" id="fpfi_crux_key" name="fpfi_settings[crux_api_key]" value="<?php echo esc_attr($s['crux_api_key']); ?>" class="regular-text" autocomplete="off">
+                                    <p class="description">
+                                        <?php
+                                        printf(
+                                            /* translators: %s: link to Google API console */
+                                            wp_kses(__('Free Google API key with the <em>Chrome UX Report API</em> (and optionally <em>PageSpeed Insights API</em>) enabled. Get one at %s. PageSpeed also works without a key at low volume.', 'fetchpriority-featured-image'), array('em' => array(), 'a' => array('href' => array(), 'target' => array()))),
+                                            '<a href="https://developer.chrome.com/docs/crux/api" target="_blank">developer.chrome.com/docs/crux/api</a>'
+                                        );
+                                        ?>
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="fpfi-card">
+                    <div class="fpfi-card-head">
+                        <span class="dashicons dashicons-chart-bar"></span>
+                        <h2><?php esc_html_e('Core Web Vitals — before / after', 'fetchpriority-featured-image'); ?></h2>
+                    </div>
+                    <div class="fpfi-card-body">
+                        <p class="description"><?php esc_html_e('Real-world field data from the Chrome UX Report. The first measurement is saved as your baseline; later runs show the change.', 'fetchpriority-featured-image'); ?></p>
+                        <p>
+                            <button type="button" class="button button-primary" id="fpfi-crux-measure"><?php esc_html_e('Measure Core Web Vitals', 'fetchpriority-featured-image'); ?></button>
+                            <button type="button" class="button" id="fpfi-crux-baseline"><?php esc_html_e('Set current as new baseline', 'fetchpriority-featured-image'); ?></button>
+                            <span id="fpfi-crux-status" style="margin-left:8px;"></span>
+                        </p>
+                        <div id="fpfi-crux-result">
+                            <?php
+                            $snaps = get_option(fpfi_crux_option_name(), array());
+                            echo fpfi_crux_render_table(is_array($snaps) ? $snaps : array()); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                            ?>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fpfi-card">
+                    <div class="fpfi-card-head">
+                        <span class="dashicons dashicons-dashboard"></span>
+                        <h2><?php esc_html_e('PageSpeed audit (Lighthouse lab)', 'fetchpriority-featured-image'); ?></h2>
+                    </div>
+                    <div class="fpfi-card-body">
+                        <p class="description"><?php esc_html_e('Run Google PageSpeed Insights on any URL. Shows the score, LCP, page weight, image-saving opportunities, and Google\'s own detected LCP element.', 'fetchpriority-featured-image'); ?></p>
+                        <p>
+                            <input type="url" id="fpfi-psi-url" class="regular-text" value="<?php echo esc_attr(home_url('/')); ?>" placeholder="<?php echo esc_attr(home_url('/')); ?>">
+                            <select id="fpfi-psi-strategy">
+                                <option value="mobile"><?php esc_html_e('Mobile', 'fetchpriority-featured-image'); ?></option>
+                                <option value="desktop"><?php esc_html_e('Desktop', 'fetchpriority-featured-image'); ?></option>
+                            </select>
+                            <button type="button" class="button button-primary" id="fpfi-psi-run"><?php esc_html_e('Run PageSpeed audit', 'fetchpriority-featured-image'); ?></button>
+                            <span id="fpfi-psi-status" style="margin-left:8px;"></span>
+                        </p>
+                        <div id="fpfi-psi-result">
+                            <?php
+                            echo fpfi_psi_render(get_option(fpfi_psi_option_name(), array())); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                            ?>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fpfi-card">
+                    <div class="fpfi-card-head">
+                        <span class="dashicons dashicons-clock"></span>
+                        <h2><?php esc_html_e('Slowest templates (real-user LCP)', 'fetchpriority-featured-image'); ?></h2>
+                    </div>
+                    <div class="fpfi-card-body">
+                        <p class="description"><?php esc_html_e('Measured from your visitors. Sorted slowest first — your optimization to-do list.', 'fetchpriority-featured-image'); ?></p>
+                        <?php fpfi_render_lcp_leaderboard(); ?>
+                    </div>
+                </div>
+
+                <div class="fpfi-card">
+                    <div class="fpfi-card-head">
+                        <span class="dashicons dashicons-admin-tools"></span>
+                        <h2><?php esc_html_e('Debug', 'fetchpriority-featured-image'); ?></h2>
+                    </div>
+                    <div class="fpfi-card-body">
+                        <table class="form-table" role="presentation">
+                            <tr>
+                                <th scope="row"><?php esc_html_e('Admin-bar badge', 'fetchpriority-featured-image'); ?></th>
+                                <td>
+                                    <label><input type="checkbox" name="fpfi_settings[enable_debug_badge]" value="1" <?php checked($s['enable_debug_badge']); ?>> <?php esc_html_e('Show a badge on the front-end admin bar with tagged-image counts.', 'fetchpriority-featured-image'); ?></label>
+                                    <p class="description"><?php esc_html_e('Visible only to users with the manage_options capability.', 'fetchpriority-featured-image'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="fpfi-savebar">
+                <?php submit_button(__('Save changes', 'fetchpriority-featured-image'), 'primary', 'submit', false); ?>
+                <span class="fpfi-savebar-hint"><?php esc_html_e('Changes apply to the front end immediately after saving.', 'fetchpriority-featured-image'); ?></span>
+            </div>
         </form>
-        <hr>
-        <p>
-            <a href="https://ko-fi.com/gunjanjaswal" target="_blank" class="button button-secondary"><?php esc_html_e('Support on Ko-fi', 'fetchpriority-featured-image'); ?></a>
-            <a href="https://github.com/gunjanjaswal/FetchPriority-Featured-Image" target="_blank" class="button button-secondary"><?php esc_html_e('GitHub', 'fetchpriority-featured-image'); ?></a>
-        </p>
     </div>
     <?php
 }
+
+/**
+ * Render the per-template LCP target table on the settings page.
+ */
+function fpfi_render_lcp_table()
+{
+    $all = fpfi_lcp_get_all();
+    if (empty($all)) {
+        echo '<p>' . esc_html__('No templates recorded yet. Browse your site (with Smart LCP enabled) or use the visual picker, and entries will appear here.', 'fetchpriority-featured-image') . '</p>';
+        return;
+    }
+
+    $modes = array(
+        'auto'    => __('Auto', 'fetchpriority-featured-image'),
+        'learned' => __('Learned only', 'fetchpriority-featured-image'),
+        'manual'  => __('Manual only', 'fetchpriority-featured-image'),
+        'off'     => __('Off', 'fetchpriority-featured-image'),
+    );
+    ?>
+    <table class="widefat striped" id="fpfi-lcp-table">
+        <thead>
+            <tr>
+                <th><?php esc_html_e('Template', 'fetchpriority-featured-image'); ?></th>
+                <th><?php esc_html_e('Effective target', 'fetchpriority-featured-image'); ?></th>
+                <th><?php esc_html_e('Source', 'fetchpriority-featured-image'); ?></th>
+                <th><?php esc_html_e('Samples', 'fetchpriority-featured-image'); ?></th>
+                <th><?php esc_html_e('Image sizing', 'fetchpriority-featured-image'); ?></th>
+                <th><?php esc_html_e('Mode', 'fetchpriority-featured-image'); ?></th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($all as $key => $rec) :
+                $eff = fpfi_effective_lcp($key);
+                $mode = isset($rec['mode']) ? $rec['mode'] : 'auto';
+                $samples = isset($rec['learned']['samples']) ? (int) $rec['learned']['samples'] : 0;
+                ?>
+                <tr>
+                    <td><strong><?php echo esc_html(fpfi_template_label($key)); ?></strong><br><code style="font-size:11px;"><?php echo esc_html($key); ?></code></td>
+                    <td>
+                        <?php if ($eff && !empty($eff['url'])) : ?>
+                            <?php if (empty($eff['is_bg'])) : ?>
+                                <img src="<?php echo esc_url($eff['url']); ?>" alt="" style="max-width:60px;max-height:40px;vertical-align:middle;border:1px solid #ddd;margin-right:6px;">
+                            <?php else : ?>
+                                <span class="dashicons dashicons-format-image" title="<?php esc_attr_e('CSS background image', 'fetchpriority-featured-image'); ?>"></span>
+                            <?php endif; ?>
+                            <span style="font-size:11px;word-break:break-all;"><?php echo esc_html(wp_basename($eff['url'])); ?></span>
+                            <?php if (!empty($eff['is_bg'])) : ?><em>(<?php esc_html_e('background', 'fetchpriority-featured-image'); ?>)</em><?php endif; ?>
+                        <?php else : ?>
+                            <em><?php esc_html_e('Featured-image guess (fallback)', 'fetchpriority-featured-image'); ?></em>
+                        <?php endif; ?>
+                    </td>
+                    <td><?php echo esc_html($eff && isset($eff['source']) ? $eff['source'] : '—'); ?></td>
+                    <td><?php echo esc_html($samples); ?></td>
+                    <td>
+                        <?php
+                        $ov = fpfi_lcp_oversize($rec);
+                        if ($ov === null) {
+                            echo '<span style="color:#787c82;">—</span>';
+                        } elseif ($ov['wasteful']) {
+                            printf(
+                                '<span style="color:#c0341a;font-weight:600;" title="%s">⚠ %s×</span><br><span style="font-size:11px;">%s</span>',
+                                esc_attr__('LCP image is larger than it displays — serving wasted bytes.', 'fetchpriority-featured-image'),
+                                esc_html(number_format($ov['factor'], 1)),
+                                esc_html(sprintf(
+                                    /* translators: 1: natural width, 2: recommended width */
+                                    __('%1$dpx → resize to ~%2$dpx', 'fetchpriority-featured-image'),
+                                    $ov['nat_w'],
+                                    $ov['target_w']
+                                ))
+                            );
+                        } else {
+                            echo '<span style="color:#0a7d28;">✓ ' . esc_html__('OK', 'fetchpriority-featured-image') . '</span>';
+                        }
+                        ?>
+                    </td>
+                    <td>
+                        <select class="fpfi-lcp-mode" data-template="<?php echo esc_attr($key); ?>">
+                            <?php foreach ($modes as $mval => $mlabel) : ?>
+                                <option value="<?php echo esc_attr($mval); ?>" <?php selected($mode, $mval); ?>><?php echo esc_html($mlabel); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    <?php
+}
+
+/**
+ * Render the slow-template leaderboard from measured real-user LCP.
+ */
+function fpfi_render_lcp_leaderboard()
+{
+    $all = fpfi_lcp_get_all();
+    $rows = array();
+    foreach ($all as $key => $rec) {
+        $avg = fpfi_lcp_avg_ms($rec);
+        if ($avg === null) {
+            continue;
+        }
+        $rows[] = array(
+            'key'    => $key,
+            'avg'    => $avg,
+            'max'    => isset($rec['perf']['max_ms']) ? (int) $rec['perf']['max_ms'] : 0,
+            'n'      => isset($rec['perf']['n']) ? (int) $rec['perf']['n'] : 0,
+        );
+    }
+
+    if (empty($rows)) {
+        echo '<p>' . esc_html__('No timing data yet. Once visitors browse your site (with Smart LCP enabled), measured LCP times appear here.', 'fetchpriority-featured-image') . '</p>';
+        return;
+    }
+
+    usort($rows, function ($a, $b) {
+        return $b['avg'] - $a['avg'];
+    });
+
+    $colors = array('good' => '#0a7d28', 'ni' => '#bd7b00', 'poor' => '#c0341a');
+    ?>
+    <table class="widefat striped" style="max-width:720px;">
+        <thead>
+            <tr>
+                <th><?php esc_html_e('Template', 'fetchpriority-featured-image'); ?></th>
+                <th><?php esc_html_e('Avg LCP', 'fetchpriority-featured-image'); ?></th>
+                <th><?php esc_html_e('Worst LCP', 'fetchpriority-featured-image'); ?></th>
+                <th><?php esc_html_e('Samples', 'fetchpriority-featured-image'); ?></th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($rows as $row) :
+                $rating = fpfi_lcp_ms_rating($row['avg']);
+                $color = isset($colors[$rating]) ? $colors[$rating] : '#787c82';
+                ?>
+                <tr>
+                    <td><strong><?php echo esc_html(fpfi_template_label($row['key'])); ?></strong></td>
+                    <td><span style="background:<?php echo esc_attr($color); ?>;color:#fff;padding:2px 8px;border-radius:10px;font-size:12px;"><?php echo esc_html(number_format($row['avg'] / 1000, 2)); ?>s</span></td>
+                    <td><?php echo esc_html(number_format($row['max'] / 1000, 2)); ?>s</td>
+                    <td><?php echo esc_html($row['n']); ?></td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    <?php
+}
+
+/**
+ * Enqueue settings-page admin JS (CrUX + PSI + per-template AJAX).
+ *
+ * @param string $hook
+ */
+function fpfi_enqueue_settings_assets($hook)
+{
+    if ('settings_page_fetchpriority-featured-image' !== $hook) {
+        return;
+    }
+    $css_path = plugin_dir_path(FPFI_PLUGIN_FILE) . 'assets/css/admin.css';
+    $css_ver  = file_exists($css_path) ? filemtime($css_path) : FETCHPRIORITY_FEATURED_IMAGE_VERSION;
+    wp_enqueue_style(
+        'fpfi-admin',
+        plugins_url('assets/css/admin.css', FPFI_PLUGIN_FILE),
+        array('dashicons'),
+        $css_ver
+    );
+    wp_enqueue_script('jquery');
+    $data = array(
+        'ajax'        => admin_url('admin-ajax.php'),
+        'cruxNonce'   => wp_create_nonce('fpfi_crux'),
+        'lcpNonce'    => wp_create_nonce('fpfi_lcp_admin'),
+        'psiNonce'    => wp_create_nonce('fpfi_psi'),
+        'measuring'   => __('Measuring…', 'fetchpriority-featured-image'),
+        'running'     => __('Running Lighthouse (up to a minute)…', 'fetchpriority-featured-image'),
+        'saved'       => __('Saved.', 'fetchpriority-featured-image'),
+        'resetConfirm' => __('Clear all learned LCP data? Manual picks are kept.', 'fetchpriority-featured-image'),
+        'error'       => __('Error.', 'fetchpriority-featured-image'),
+    );
+    $js = '
+    (function($){
+        var D = ' . wp_json_encode($data) . ';
+
+        // ---- Tabs ----
+        var KEY = "fpfi_active_tab";
+        function activate(tab){
+            if(!tab) return;
+            var $btn = $(".fpfi-tab[data-tab=\'" + tab + "\']");
+            if(!$btn.length){ tab = "smart"; $btn = $(".fpfi-tab[data-tab=\'smart\']"); }
+            $(".fpfi-tab").removeClass("is-active");
+            $btn.addClass("is-active");
+            $(".fpfi-panel").removeClass("is-active");
+            $(".fpfi-panel[data-panel=\'" + tab + "\']").addClass("is-active");
+            try{ window.localStorage.setItem(KEY, tab); }catch(e){}
+        }
+        $(document).on("click", ".fpfi-tab", function(){ activate($(this).data("tab")); });
+        var saved = null;
+        try{ saved = window.localStorage.getItem(KEY); }catch(e){}
+        if(saved){ activate(saved); }
+
+        function crux(setBaseline){
+            var $s = $("#fpfi-crux-status").text(D.measuring);
+            $.post(D.ajax, {action:"fpfi_crux_fetch", nonce:D.cruxNonce, set_baseline: setBaseline?1:0})
+            .done(function(r){
+                if(r && r.success){ $("#fpfi-crux-result").html(r.data.html); $s.text(""); }
+                else { $s.text((r && r.data && r.data.message) ? r.data.message : D.error); }
+            }).fail(function(){ $s.text(D.error); });
+        }
+        $("#fpfi-crux-measure").on("click", function(){ crux(false); });
+        $("#fpfi-crux-baseline").on("click", function(){ crux(true); });
+        $("#fpfi-psi-run").on("click", function(){
+            var $s = $("#fpfi-psi-status").text(D.running);
+            $.post(D.ajax, {action:"fpfi_psi_fetch", nonce:D.psiNonce, url:$("#fpfi-psi-url").val(), strategy:$("#fpfi-psi-strategy").val()})
+            .done(function(r){
+                if(r && r.success){ $("#fpfi-psi-result").html(r.data.html); $s.text(""); }
+                else { $s.text((r && r.data && r.data.message) ? r.data.message : D.error); }
+            }).fail(function(){ $s.text(D.error); });
+        });
+        $(document).on("change", ".fpfi-lcp-mode", function(){
+            var $sel=$(this);
+            $.post(D.ajax, {action:"fpfi_lcp_save_mode", nonce:D.lcpNonce, template:$sel.data("template"), mode:$sel.val()})
+            .done(function(){ $("#fpfi-lcp-status").text(D.saved).delay(1500).queue(function(n){$(this).text("");n();}); });
+        });
+        $("#fpfi-lcp-reset").on("click", function(){
+            if(!window.confirm(D.resetConfirm)) return;
+            $.post(D.ajax, {action:"fpfi_lcp_reset", nonce:D.lcpNonce})
+            .done(function(){ $("#fpfi-lcp-status").text(D.saved); location.reload(); });
+        });
+    })(jQuery);
+    ';
+    wp_add_inline_script('jquery', $js);
+}
+add_action('admin_enqueue_scripts', 'fpfi_enqueue_settings_assets');
 
 /* -------------------------------------------------------------------------
  * Plugin meta + admin notice
@@ -760,3 +1307,122 @@ function fpfi_dismiss_coffee_notice()
     wp_die();
 }
 add_action('wp_ajax_fpfi_dismiss_coffee_notice', 'fpfi_dismiss_coffee_notice');
+
+/* -------------------------------------------------------------------------
+ * "What's new" notice after a plugin update
+ * ---------------------------------------------------------------------- */
+
+/**
+ * Track the installed version so we can detect updates.
+ *
+ * Sets the dismissed flag to the current version on a *fresh* install so new
+ * users are not shown an upgrade announcement.
+ */
+function fpfi_track_version()
+{
+    $prev = get_option('fpfi_version', '');
+    $cur  = FETCHPRIORITY_FEATURED_IMAGE_VERSION;
+
+    if ($prev === $cur) {
+        return;
+    }
+
+    if ($prev === '') {
+        // No version tracked yet. Distinguish a genuinely fresh install from an
+        // upgrade out of a pre-1.4.0 build (which never stored fpfi_version).
+        $looks_existing = (get_option('fpfi_settings', null) !== null)
+            || (get_option('fpfi_coffee_notice_dismissed', null) !== null);
+        if (!$looks_existing) {
+            // Fresh install — suppress the "what's new" notice.
+            update_option('fpfi_whatsnew_dismissed', $cur, false);
+        }
+        // else: leave the dismissed flag unset so the upgrade notice shows.
+    }
+
+    update_option('fpfi_version', $cur, false);
+}
+add_action('admin_init', 'fpfi_track_version');
+
+/**
+ * Short list of headline features for the current version.
+ *
+ * @return string[]
+ */
+function fpfi_whatsnew_highlights()
+{
+    return array(
+        __('Self-learning LCP — measures the real Largest Contentful Paint element from your visitors and auto-prioritises it.', 'fetchpriority-featured-image'),
+        __('Visual LCP picker — click your hero on the front end to lock it in per template.', 'fetchpriority-featured-image'),
+        __('Core Web Vitals report + one-click PageSpeed (Lighthouse) audit, right in the dashboard.', 'fetchpriority-featured-image'),
+        __('Oversized-image warnings, CSS background-image preload, and a slowest-templates leaderboard.', 'fetchpriority-featured-image'),
+    );
+}
+
+/**
+ * Show a dismissible "what's new" banner after an update.
+ */
+function fpfi_whatsnew_notice()
+{
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+    $cur = FETCHPRIORITY_FEATURED_IMAGE_VERSION;
+    if (get_option('fpfi_whatsnew_dismissed') === $cur) {
+        return;
+    }
+    $screen = get_current_screen();
+    if (!$screen || !in_array($screen->id, array('dashboard', 'plugins', 'settings_page_fetchpriority-featured-image'), true)) {
+        return;
+    }
+    $settings_url = admin_url('options-general.php?page=fetchpriority-featured-image');
+    ?>
+    <div class="notice notice-info is-dismissible fpfi-whatsnew-notice" data-nonce="<?php echo esc_attr(wp_create_nonce('fpfi_whatsnew')); ?>">
+        <p style="font-size:14px;margin-bottom:6px;">
+            <strong>
+                <?php
+                printf(
+                    /* translators: %s: version number */
+                    esc_html__('FetchPriority Featured Image %s — what\'s new', 'fetchpriority-featured-image'),
+                    esc_html($cur)
+                );
+                ?>
+            </strong>
+        </p>
+        <ul style="list-style:disc;margin:0 0 8px 20px;">
+            <?php foreach (fpfi_whatsnew_highlights() as $line) : ?>
+                <li><?php echo esc_html($line); ?></li>
+            <?php endforeach; ?>
+        </ul>
+        <p>
+            <a href="<?php echo esc_url($settings_url); ?>" class="button button-primary"><?php esc_html_e('Open settings', 'fetchpriority-featured-image'); ?></a>
+        </p>
+    </div>
+    <script>
+    (function(){
+        document.addEventListener('click', function(e){
+            var n = e.target.closest ? e.target.closest('.fpfi-whatsnew-notice .notice-dismiss') : null;
+            if (!n) { return; }
+            var box = e.target.closest('.fpfi-whatsnew-notice');
+            var data = new FormData();
+            data.append('action', 'fpfi_dismiss_whatsnew');
+            data.append('nonce', box ? box.getAttribute('data-nonce') : '');
+            fetch(ajaxurl, { method:'POST', credentials:'same-origin', body:data });
+        });
+    })();
+    </script>
+    <?php
+}
+add_action('admin_notices', 'fpfi_whatsnew_notice');
+
+function fpfi_dismiss_whatsnew()
+{
+    if (!current_user_can('manage_options')) {
+        wp_die('', '', 403);
+    }
+    if (!isset($_REQUEST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['nonce'])), 'fpfi_whatsnew')) {
+        wp_die('', '', 403);
+    }
+    update_option('fpfi_whatsnew_dismissed', FETCHPRIORITY_FEATURED_IMAGE_VERSION, false);
+    wp_die();
+}
+add_action('wp_ajax_fpfi_dismiss_whatsnew', 'fpfi_dismiss_whatsnew');

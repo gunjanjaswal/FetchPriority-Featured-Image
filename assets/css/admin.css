@@ -1,0 +1,292 @@
+/**
+ * FetchPriority Featured Image — settings UI.
+ */
+
+.fpfi-admin {
+	max-width: 980px;
+}
+
+.fpfi-admin * {
+	box-sizing: border-box;
+}
+
+/* ---- Header ---- */
+.fpfi-header {
+	margin: 16px 0 18px;
+	padding: 22px 24px;
+	border: 1px solid #c3c4c7;
+	border-left: 4px solid #2271b1;
+	border-radius: 4px;
+	background: #fff;
+}
+
+.fpfi-header h1 {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 0;
+	padding: 0;
+	color: #1d2327;
+	font-size: 21px;
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+.fpfi-header h1 .dashicons {
+	color: #2271b1;
+	font-size: 26px;
+	width: 26px;
+	height: 26px;
+}
+
+.fpfi-version-pill {
+	display: inline-block;
+	margin-left: 4px;
+	padding: 1px 9px;
+	border-radius: 3px;
+	background: #f0f0f1;
+	color: #50575e;
+	font-size: 12px;
+	font-weight: 600;
+	vertical-align: middle;
+}
+
+.fpfi-header p {
+	margin: 8px 0 0;
+	max-width: 660px;
+	font-size: 13.5px;
+	color: #50575e;
+}
+
+.fpfi-header-links {
+	margin-top: 14px;
+}
+
+.fpfi-header-links a {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	margin-right: 6px;
+	padding: 5px 12px;
+	border: 1px solid #c3c4c7;
+	border-radius: 3px;
+	background: #f6f7f7;
+	color: #2c3338;
+	text-decoration: none;
+	font-size: 13px;
+	font-weight: 500;
+}
+
+.fpfi-header-links a:hover {
+	background: #f0f0f1;
+	border-color: #8c8f94;
+	color: #1d2327;
+}
+
+.fpfi-header-links a .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+}
+
+/* ---- Tabs ---- */
+.fpfi-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-bottom: 18px;
+	border-bottom: 1px solid #c3c4c7;
+}
+
+.fpfi-tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	padding: 10px 16px;
+	border: 0;
+	background: none;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: 600;
+	color: #50575e;
+	border-bottom: 3px solid transparent;
+	margin-bottom: -1px;
+}
+
+.fpfi-tab .dashicons {
+	font-size: 18px;
+	width: 18px;
+	height: 18px;
+}
+
+.fpfi-tab:hover {
+	color: #1d2327;
+}
+
+.fpfi-tab.is-active {
+	color: #2271b1;
+	border-bottom-color: #2271b1;
+}
+
+.fpfi-tab:focus {
+	outline: none;
+	box-shadow: none;
+}
+
+/* ---- Panels ---- */
+.fpfi-panel {
+	display: none;
+}
+
+.fpfi-panel.is-active {
+	display: block;
+}
+
+/* ---- Cards ---- */
+.fpfi-card {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	margin-bottom: 16px;
+}
+
+.fpfi-card-head {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	padding: 12px 18px;
+	border-bottom: 1px solid #dcdcde;
+	background: #f6f7f7;
+}
+
+.fpfi-card-head .dashicons {
+	color: #2271b1;
+	font-size: 19px;
+	width: 19px;
+	height: 19px;
+}
+
+.fpfi-card-head h2 {
+	margin: 0;
+	padding: 0;
+	font-size: 15px;
+	font-weight: 600;
+	color: #1d2327;
+}
+
+.fpfi-card-head .fpfi-card-sub {
+	margin-left: auto;
+	font-size: 12px;
+	color: #787c82;
+	font-weight: 500;
+}
+
+.fpfi-card-body {
+	padding: 6px 18px 12px;
+}
+
+.fpfi-card-body .form-table {
+	margin-top: 0;
+}
+
+.fpfi-card-body .form-table th {
+	padding: 16px 10px 16px 0;
+	font-size: 13.5px;
+}
+
+.fpfi-card-body .description {
+	color: #646970;
+	font-size: 12.5px;
+}
+
+/* ---- Toggle switches (bare checkboxes, no markup change) ---- */
+.fpfi-card-body input[type="checkbox"],
+.fpfi-panel input[type="checkbox"] {
+	-webkit-appearance: none;
+	appearance: none;
+	position: relative;
+	width: 38px;
+	height: 20px;
+	margin: 0 8px 0 0;
+	border: 1px solid #8c8f94;
+	border-radius: 20px;
+	background: #dcdcde;
+	cursor: pointer;
+	vertical-align: middle;
+	flex-shrink: 0;
+}
+
+.fpfi-card-body input[type="checkbox"]::before,
+.fpfi-panel input[type="checkbox"]::before {
+	content: "";
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: #fff;
+}
+
+.fpfi-card-body input[type="checkbox"]:checked,
+.fpfi-panel input[type="checkbox"]:checked {
+	background: #2271b1;
+	border-color: #2271b1;
+}
+
+.fpfi-card-body input[type="checkbox"]:checked::before,
+.fpfi-panel input[type="checkbox"]:checked::before {
+	left: auto;
+	right: 2px;
+}
+
+.fpfi-card-body input[type="checkbox"]:focus,
+.fpfi-panel input[type="checkbox"]:focus {
+	box-shadow: 0 0 0 1px #fff, 0 0 0 3px #2271b1;
+}
+
+.fpfi-card-body label {
+	display: inline-flex;
+	align-items: center;
+	font-size: 13.5px;
+	line-height: 1.5;
+	margin-bottom: 4px;
+}
+
+/* Stack the "Apply on" context toggles one per row, aligned. */
+.fpfi-card-body fieldset {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.fpfi-card-body fieldset label {
+	display: flex;
+	align-items: center;
+	margin: 0;
+}
+
+/* ---- Save bar ---- */
+.fpfi-savebar {
+	position: sticky;
+	bottom: 0;
+	z-index: 5;
+	margin-top: 18px;
+	padding: 12px 18px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.fpfi-savebar .fpfi-savebar-hint {
+	color: #787c82;
+	font-size: 12.5px;
+}
+
+/* ---- Tool tables ---- */
+.fpfi-panel .widefat {
+	margin-top: 10px;
+}

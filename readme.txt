@@ -2,22 +2,35 @@
 Plugin URI: https://github.com/gunjanjaswal/FetchPriority-Featured-Image
 Contributors: gunjanjaswal
 Donate link: https://ko-fi.com/gunjanjaswal
-Tags: performance, images, featured-image, web-vitals, fetchpriority
+Tags: performance, core-web-vitals, lcp, fetchpriority, image-optimization
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.3.0
+Stable tag: 1.4.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Automatically adds fetchpriority="high" attribute to featured images to improve page loading performance and Core Web Vitals.
+Measures your real LCP element from visitors and auto-applies fetchpriority + preload. Visual picker and Core Web Vitals report.
 
 == Description ==
 
-FetchPriority Featured Image is a lightweight plugin that automatically adds the `fetchpriority="high"` attribute to featured images on your WordPress site. This helps browsers prioritize the loading of these important images, improving your site's performance and Core Web Vitals scores.
+FetchPriority Featured Image is a self-learning LCP (Largest Contentful Paint) optimizer. Instead of *guessing* which image is your hero like every other plugin, it **measures the real LCP element from your actual visitors** (via the browser's PerformanceObserver), learns it per template, and then automatically applies `fetchpriority="high"` plus a `<link rel="preload">` to that exact image — whether it's a normal `<img>` or a CSS `background-image`. It self-corrects as your design and content change, with zero configuration.
+
+= What makes it different =
+
+* **Self-learning real LCP** — no competitor in this space measures field LCP from real users and auto-targets it. Most plugins blindly prioritize the featured image and hope it's the hero.
+* **CSS background-image preload** — hero sliders and background heroes are a blind spot for most performance plugins; this preloads them.
+* **Visual LCP picker** — click your hero element on the front end to lock it in as a manual override per template.
+* **Built-in Core Web Vitals before/after report** — pulls real-world LCP, INP, and CLS from the Chrome UX Report so you can prove the impact.
+* **Per-template control** — Auto / Learned-only / Manual-only / Off for every template the plugin sees.
 
 = Key Features =
 
+* Self-learning LCP detection from real-user field data (PerformanceObserver beacon), aggregated per template
+* Visual click-to-pick LCP element on the front end (admin-bar → "Pick LCP element")
+* Core Web Vitals before/after report via the Chrome UX Report (CrUX) API
+* Preloads + prioritizes the measured LCP, including CSS `background-image` heroes
+* Per-template modes: Auto, Learned-only, Manual-only, Off
 * Automatically adds `fetchpriority="high"` to the hero / featured image
 * Optional `fetchpriority="low"` for below-fold images — paired complement that tells the browser to defer non-critical loads
 * `<link rel="preload" as="image">` for the hero featured image on singular pages — strongest LCP signal
@@ -74,6 +87,20 @@ You can view the HTML source of your pages and look for `fetchpriority="high"` i
 
 == Changelog ==
 
+= 1.4.0 =
+* NEW: Self-learning LCP — a lightweight PerformanceObserver beacon reports the real Largest Contentful Paint element per template; once enough samples are collected the plugin auto-preloads and tags that exact image with `fetchpriority="high"`.
+* NEW: CSS `background-image` hero support — preloads the measured/manual background image, a blind spot for most performance plugins.
+* NEW: Visual LCP picker — open the front-end admin bar, click "Pick LCP element", click your hero, done. Saved as a manual override per template.
+* NEW: Core Web Vitals before/after report — connect a free Chrome UX Report (CrUX) API key to see real-world LCP, INP, and CLS, with a saved baseline to measure improvement.
+* NEW: Per-template control table — Auto / Learned-only / Manual-only / Off for every template the plugin has seen.
+* NEW: PageSpeed audit — run Google Lighthouse on any URL from the admin; see the performance score, LCP, page weight, image-saving opportunities, and Google's own detected LCP element to confirm correct targeting.
+* NEW: Oversized-LCP detection — compares the measured LCP image's real pixels against its displayed size and warns when you're serving wasted bytes, with a recommended width.
+* NEW: Loading optimization — forces `loading="eager"` on the LCP image and `loading="lazy"` on below-fold images so native lazy-loading never delays your hero.
+* NEW: Slowest-templates leaderboard — measured real-user LCP per template, sorted slowest first, as a built-in to-do list.
+* Video poster and `<picture>` heroes are supported as LCP targets via the learned/manual preload.
+* Configurable sampling rate for the measurement script to keep front-end overhead minimal.
+* Learned/manual targets supersede the featured-image guess for both preload and the `fetchpriority` tag.
+
 = 1.3.0 =
 * Added Settings page under Settings → FetchPriority (Contexts / Preload / Below-fold / Exclusions / Theme preset / Debug).
 * Added per-context toggles: Single posts & pages, Blog home, Archives, Search results.
@@ -113,6 +140,9 @@ You can view the HTML source of your pages and look for `fetchpriority="high"` i
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.4.0 =
+Major update: self-learning LCP from real visitors, CSS background-image preload, visual LCP picker, and a built-in Core Web Vitals before/after report. Backward-compatible; learning is on by default at a 20% sample rate.
 
 = 1.3.0 =
 Settings page; hero preload with AVIF/WebP detection; optional low-priority below-fold tagging; theme presets (Astra/GeneratePress/Kadence/Divi/Elementor); avatar exclusion; admin-bar debug badge. Defaults backward-compatible; low-priority tagging opt-in.

@@ -5,7 +5,7 @@ Donate link: https://ko-fi.com/gunjanjaswal
 Tags: performance, core-web-vitals, lcp, fetchpriority, image-optimization
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.5.2
+Stable tag: 1.5.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -110,6 +110,10 @@ View the HTML source and look for `fetchpriority="high"` on the hero image and a
 
 == Changelog ==
 
+= 1.5.3 =
+* FIX: The settings toggles showed a hard outline ring after you clicked them (Chrome treats a toggle click as keyboard focus), which looked like the control was stuck or broken. Replaced it with a soft focus glow.
+* FIX: The Export / Import buttons rendered their icon dropped into the bottom-left corner instead of next to the label. They now use a flex layout so the icon and text stay centered together.
+
 = 1.5.2 =
 * IMPROVED: Redesigned the settings toggle switches — larger, with a shadowed knob, a smooth slide animation, a cleaner off state, and a proper keyboard focus ring. Purely visual; no settings or behaviour changed.
 
@@ -182,6 +186,9 @@ View the HTML source and look for `fetchpriority="high"` on the hero image and a
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.5.3 =
+Fixes the toggle focus ring and the Export/Import button icon alignment on the settings screen. Visual only.
 
 = 1.5.2 =
 Polished the settings toggle switches. Visual only.

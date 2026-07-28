@@ -251,10 +251,16 @@
 	transform: translateX(20px);
 }
 
+.fpfi-card-body input[type="checkbox"]:focus,
+.fpfi-panel input[type="checkbox"]:focus {
+	outline: none;
+	box-shadow: none;
+}
+
 .fpfi-card-body input[type="checkbox"]:focus-visible,
 .fpfi-panel input[type="checkbox"]:focus-visible {
-	outline: 2px solid #2271b1;
-	outline-offset: 2px;
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(34, 113, 177, .35);
 }
 
 .fpfi-card-body label {
@@ -263,6 +269,21 @@
 	font-size: 13.5px;
 	line-height: 1.5;
 	margin-bottom: 4px;
+}
+
+/* Buttons with a leading dashicon (Export / Import) — keep icon + text centered. */
+.fpfi-btn-icon {
+	display: inline-flex !important;
+	align-items: center;
+	gap: 6px;
+	vertical-align: middle;
+}
+
+.fpfi-btn-icon .dashicons {
+	width: 18px;
+	height: 18px;
+	font-size: 18px;
+	line-height: 18px;
 }
 
 /* Stack the "Apply on" context toggles one per row, aligned. */

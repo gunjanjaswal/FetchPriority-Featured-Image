@@ -192,6 +192,10 @@ If you find this plugin useful, consider [supporting on Ko-fi](https://ko-fi.com
 
 ## Changelog
 
+### Version 1.5.3
+* **Fix:** settings toggles showed a hard outline ring after a click (Chrome treats a toggle click as keyboard focus) — replaced with a soft focus glow.
+* **Fix:** the Export / Import buttons rendered their icon dropped to the bottom-left instead of beside the label — now a centered flex layout.
+
 ### Version 1.5.2
 * **Improved:** redesigned the settings toggle switches — larger, shadowed knob, smooth slide animation, cleaner off state, and a proper keyboard focus ring. Visual only.
 

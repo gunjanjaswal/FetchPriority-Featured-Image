@@ -3,7 +3,7 @@
  * Plugin Name: FetchPriority Featured Image
  * Plugin URI: https://wordpress.org/plugins/fetchpriority-featured-image/
  * Description: Self-learning LCP optimizer. Measures the real Largest Contentful Paint element from your visitors and auto-applies fetchpriority="high" + preload to it (foreground or CSS background), with a visual LCP picker, per-template control, AVIF/WebP detection, and a built-in Core Web Vitals before/after report.
- * Version: 1.5.2
+ * Version: 1.5.3
  * Author: Gunjan Jaswal
  * Author URI: https://gunjanjaswal.me
  * License: GPL v2 or later
@@ -19,7 +19,7 @@ if (!defined('WPINC')) {
     die;
 }
 
-define('FETCHPRIORITY_FEATURED_IMAGE_VERSION', '1.5.2');
+define('FETCHPRIORITY_FEATURED_IMAGE_VERSION', '1.5.3');
 define('FPFI_PLUGIN_FILE', __FILE__);
 
 /* -------------------------------------------------------------------------
@@ -1053,8 +1053,8 @@ function fpfi_render_settings_page()
                     <div class="fpfi-card-body">
                         <p class="description"><?php esc_html_e('Save your configuration to a file and load it on another site. Learned LCP data and your API key are kept out of the file — those stay per-site.', 'fetchpriority-featured-image'); ?></p>
                         <p>
-                            <a class="button" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=fpfi_export_settings'), 'fpfi_export_settings')); ?>"><span class="dashicons dashicons-download" style="vertical-align:middle;"></span> <?php esc_html_e('Export settings', 'fetchpriority-featured-image'); ?></a>
-                            <label class="button" style="cursor:pointer;"><span class="dashicons dashicons-upload" style="vertical-align:middle;"></span> <?php esc_html_e('Import settings', 'fetchpriority-featured-image'); ?><input type="file" id="fpfi-import-file" accept="application/json,.json" style="display:none;"></label>
+                            <a class="button fpfi-btn-icon" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=fpfi_export_settings'), 'fpfi_export_settings')); ?>"><span class="dashicons dashicons-download"></span> <?php esc_html_e('Export settings', 'fetchpriority-featured-image'); ?></a>
+                            <label class="button fpfi-btn-icon"><span class="dashicons dashicons-upload"></span> <?php esc_html_e('Import settings', 'fetchpriority-featured-image'); ?><input type="file" id="fpfi-import-file" accept="application/json,.json" style="display:none;"></label>
                             <button type="button" class="button" id="fpfi-reset-settings"><?php esc_html_e('Reset to defaults', 'fetchpriority-featured-image'); ?></button>
                             <span id="fpfi-porting-status" style="margin-left:8px;"></span>
                         </p>

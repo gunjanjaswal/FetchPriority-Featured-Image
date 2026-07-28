@@ -192,6 +192,11 @@ If you find this plugin useful, consider [supporting on Ko-fi](https://ko-fi.com
 
 ## Changelog
 
+### Version 1.5.1
+* **Fix:** the "Measure Core Web Vitals" and "Run PageSpeed audit" buttons (and "Clear learned data" / import / reset) did nothing when clicked — the admin script bound its handlers before the DOM was ready. Now wrapped in a ready callback.
+* **Improved:** PageSpeed audit falls back to a keyless request when a Google API key is rejected (e.g. a key enabled only for the Chrome UX Report).
+* **Improved:** CrUX / PageSpeed errors now render in the panel instead of a small status line, so messages like "no field data for this origin" on lower-traffic sites are visible.
+
 ### Version 1.5.0
 * **WooCommerce** — the main image in the single-product gallery is now prioritized as the hero. Shop and product-category pages were already covered by the archive rules; this fills the one gap, since the gallery builds its own markup.
 * **Text-LCP web-font preload** — on pages where the largest element is text, the plugin learns the web font that text used and preloads it. Works with self-hosted fonts and Google Fonts, per template.

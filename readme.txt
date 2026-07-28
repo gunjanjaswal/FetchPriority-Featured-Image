@@ -5,7 +5,7 @@ Donate link: https://ko-fi.com/gunjanjaswal
 Tags: performance, core-web-vitals, lcp, fetchpriority, image-optimization
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.5.0
+Stable tag: 1.5.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -110,6 +110,11 @@ View the HTML source and look for `fetchpriority="high"` on the hero image and a
 
 == Changelog ==
 
+= 1.5.1 =
+* FIX: The "Measure Core Web Vitals" and "Run PageSpeed audit" buttons (plus "Clear learned data" and the new import/reset controls) did nothing when clicked. The admin script bound its click handlers before the page had finished loading, so they never attached. Wrapped the script so it runs after the DOM is ready.
+* IMPROVED: PageSpeed audit now falls back to a keyless request if your Google API key is rejected — handy when the key was created only for the Chrome UX Report and doesn't have the PageSpeed Insights API enabled.
+* IMPROVED: CrUX and PageSpeed errors now show up in the panel itself instead of a small status line, so a "no field data for this origin" message (common on lower-traffic sites) is actually visible.
+
 = 1.5.0 =
 * NEW: WooCommerce support — the main image in the single-product gallery now gets prioritised as the hero. Shop and product-category pages were already covered by the archive rules; this fills the one gap, since the gallery builds its own markup. Toggle it under Targeting (shown only when WooCommerce is active).
 * NEW: Text-LCP font preload — on the many pages where the largest element is a heading or paragraph rather than an image, the plugin now learns which web font that text used and preloads it. Works with self-hosted fonts and Google Fonts, per template, from the same real-visitor measurements.
@@ -174,6 +179,9 @@ View the HTML source and look for `fetchpriority="high"` on the hero image and a
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.5.1 =
+Fixes the Core Web Vitals and PageSpeed audit buttons, which weren't responding to clicks. Recommended for anyone using the Diagnostics tab.
 
 = 1.5.0 =
 Adds WooCommerce product-gallery support, web-font preload for text heroes, cross-origin CDN preconnect, settings import/export, WP-CLI commands, and a full translation template. Backward-compatible; the new options default on but only act where they apply.

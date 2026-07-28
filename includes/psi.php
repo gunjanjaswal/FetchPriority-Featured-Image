@@ -33,22 +33,40 @@ function fpfi_psi_query($url, $strategy = 'mobile', $api_key = '')
     }
     $strategy = ($strategy === 'desktop') ? 'desktop' : 'mobile';
 
-    $query = array(
+    $base = array(
         'url'      => $url,
         'strategy' => $strategy,
         'category' => 'performance',
     );
-    if (trim($api_key) !== '') {
-        $query['key'] = trim($api_key);
-    }
-    $endpoint = add_query_arg($query, 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed');
 
-    $resp = wp_remote_get($endpoint, array('timeout' => 60));
+    // Try the request, optionally with a key.
+    $run = function ($with_key) use ($base, $api_key) {
+        $query = $base;
+        if ($with_key && trim($api_key) !== '') {
+            $query['key'] = trim($api_key);
+        }
+        $endpoint = add_query_arg($query, 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed');
+        return wp_remote_get($endpoint, array('timeout' => 60));
+    };
+
+    $has_key = trim($api_key) !== '';
+    $resp    = $run($has_key);
+
+    $code = is_wp_error($resp) ? 0 : wp_remote_retrieve_response_code($resp);
+    $json = is_wp_error($resp) ? null : json_decode(wp_remote_retrieve_body($resp), true);
+
+    // PSI is a lab test and works without a key at low volume. A key created only
+    // for the Chrome UX Report (very common) gets rejected here, so if the keyed
+    // request failed, fall back to a keyless one before giving up.
+    if ($has_key && ($code !== 200 || empty($json['lighthouseResult']))) {
+        $resp = $run(false);
+        $code = is_wp_error($resp) ? 0 : wp_remote_retrieve_response_code($resp);
+        $json = is_wp_error($resp) ? null : json_decode(wp_remote_retrieve_body($resp), true);
+    }
+
     if (is_wp_error($resp)) {
         return $resp;
     }
-    $code = wp_remote_retrieve_response_code($resp);
-    $json = json_decode(wp_remote_retrieve_body($resp), true);
 
     if ($code !== 200 || empty($json['lighthouseResult'])) {
         $msg = isset($json['error']['message']) ? $json['error']['message'] : __('PageSpeed Insights request failed (try again — the API is rate-limited without a key).', 'fetchpriority-featured-image');

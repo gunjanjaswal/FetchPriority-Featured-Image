@@ -3,7 +3,7 @@
  * Plugin Name: FetchPriority Featured Image
  * Plugin URI: https://wordpress.org/plugins/fetchpriority-featured-image/
  * Description: Self-learning LCP optimizer. Measures the real Largest Contentful Paint element from your visitors and auto-applies fetchpriority="high" + preload to it (foreground or CSS background), with a visual LCP picker, per-template control, AVIF/WebP detection, and a built-in Core Web Vitals before/after report.
- * Version: 1.5.0
+ * Version: 1.5.1
  * Author: Gunjan Jaswal
  * Author URI: https://gunjanjaswal.me
  * License: GPL v2 or later
@@ -19,7 +19,7 @@ if (!defined('WPINC')) {
     die;
 }
 
-define('FETCHPRIORITY_FEATURED_IMAGE_VERSION', '1.5.0');
+define('FETCHPRIORITY_FEATURED_IMAGE_VERSION', '1.5.1');
 define('FPFI_PLUGIN_FILE', __FILE__);
 
 /* -------------------------------------------------------------------------
@@ -1250,8 +1250,12 @@ function fpfi_enqueue_settings_assets($hook)
         'settingsResetConfirm' => __('Reset all settings to their defaults? Your saved API key is kept.', 'fetchpriority-featured-image'),
     );
     $js = '
-    (function($){
+    jQuery(function($){
         var D = ' . wp_json_encode($data) . ';
+
+        function notice($box, msg){
+            $box.html($("<div class=\'notice notice-error inline\'><p></p></div>").find("p").text(msg).end());
+        }
 
         // ---- Tabs ----
         var KEY = "fpfi_active_tab";
@@ -1274,9 +1278,10 @@ function fpfi_enqueue_settings_assets($hook)
             var $s = $("#fpfi-crux-status").text(D.measuring);
             $.post(D.ajax, {action:"fpfi_crux_fetch", nonce:D.cruxNonce, set_baseline: setBaseline?1:0})
             .done(function(r){
-                if(r && r.success){ $("#fpfi-crux-result").html(r.data.html); $s.text(""); }
-                else { $s.text((r && r.data && r.data.message) ? r.data.message : D.error); }
-            }).fail(function(){ $s.text(D.error); });
+                $s.text("");
+                if(r && r.success){ $("#fpfi-crux-result").html(r.data.html); }
+                else { notice($("#fpfi-crux-result"), (r && r.data && r.data.message) ? r.data.message : D.error); }
+            }).fail(function(){ $s.text(""); notice($("#fpfi-crux-result"), D.error); });
         }
         $("#fpfi-crux-measure").on("click", function(){ crux(false); });
         $("#fpfi-crux-baseline").on("click", function(){ crux(true); });
@@ -1284,9 +1289,10 @@ function fpfi_enqueue_settings_assets($hook)
             var $s = $("#fpfi-psi-status").text(D.running);
             $.post(D.ajax, {action:"fpfi_psi_fetch", nonce:D.psiNonce, url:$("#fpfi-psi-url").val(), strategy:$("#fpfi-psi-strategy").val()})
             .done(function(r){
-                if(r && r.success){ $("#fpfi-psi-result").html(r.data.html); $s.text(""); }
-                else { $s.text((r && r.data && r.data.message) ? r.data.message : D.error); }
-            }).fail(function(){ $s.text(D.error); });
+                $s.text("");
+                if(r && r.success){ $("#fpfi-psi-result").html(r.data.html); }
+                else { notice($("#fpfi-psi-result"), (r && r.data && r.data.message) ? r.data.message : D.error); }
+            }).fail(function(){ $s.text(""); notice($("#fpfi-psi-result"), D.error); });
         });
         $(document).on("change", ".fpfi-lcp-mode", function(){
             var $sel=$(this);
@@ -1325,7 +1331,7 @@ function fpfi_enqueue_settings_assets($hook)
                 else { $s.text((r && r.data && r.data.message) ? r.data.message : D.error); }
             }).fail(function(){ $s.text(D.error); });
         });
-    })(jQuery);
+    });
     ';
     wp_add_inline_script('jquery', $js);
 }

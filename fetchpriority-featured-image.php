@@ -3,7 +3,7 @@
  * Plugin Name: FetchPriority Featured Image
  * Plugin URI: https://wordpress.org/plugins/fetchpriority-featured-image/
  * Description: Self-learning LCP optimizer. Measures the real Largest Contentful Paint element from your visitors and auto-applies fetchpriority="high" + preload to it (foreground or CSS background), with a visual LCP picker, per-template control, AVIF/WebP detection, and a built-in Core Web Vitals before/after report.
- * Version: 1.4.0
+ * Version: 1.5.0
  * Author: Gunjan Jaswal
  * Author URI: https://gunjanjaswal.me
  * License: GPL v2 or later
@@ -19,7 +19,7 @@ if (!defined('WPINC')) {
     die;
 }
 
-define('FETCHPRIORITY_FEATURED_IMAGE_VERSION', '1.4.0');
+define('FETCHPRIORITY_FEATURED_IMAGE_VERSION', '1.5.0');
 define('FPFI_PLUGIN_FILE', __FILE__);
 
 /* -------------------------------------------------------------------------
@@ -30,6 +30,33 @@ require_once plugin_dir_path(__FILE__) . 'includes/lcp-learning.php';
 require_once plugin_dir_path(__FILE__) . 'includes/crux.php';
 require_once plugin_dir_path(__FILE__) . 'includes/psi.php';
 require_once plugin_dir_path(__FILE__) . 'includes/picker.php';
+require_once plugin_dir_path(__FILE__) . 'includes/fonts.php';
+require_once plugin_dir_path(__FILE__) . 'includes/preconnect.php';
+require_once plugin_dir_path(__FILE__) . 'includes/woocommerce.php';
+require_once plugin_dir_path(__FILE__) . 'includes/porting.php';
+
+if (defined('WP_CLI') && WP_CLI) {
+    require_once plugin_dir_path(__FILE__) . 'includes/cli.php';
+}
+
+/**
+ * Load translations.
+ *
+ * Plugins hosted on WordPress.org get their translate.wordpress.org strings
+ * loaded automatically, but this also picks up any hand-installed .mo files in
+ * wp-content/languages/plugins/ or this plugin's /languages folder. Hooked on
+ * init so it never fires before translations are ready (avoids the WP 6.7+
+ * just-in-time loading notice).
+ */
+function fpfi_load_textdomain()
+{
+    load_plugin_textdomain(
+        'fetchpriority-featured-image',
+        false,
+        dirname(plugin_basename(__FILE__)) . '/languages'
+    );
+}
+add_action('init', 'fpfi_load_textdomain');
 
 /**
  * Plugin activation hook.
@@ -68,6 +95,12 @@ function fpfi_default_settings()
         'lcp_sample_rate'              => 20,
         'enable_bg_preload'            => 1,
         'enable_loading_optim'         => 1,
+        // Font / text-LCP preload
+        'enable_font_preload'          => 1,
+        // Cross-origin (CDN) preconnect
+        'enable_preconnect'            => 1,
+        // WooCommerce
+        'enable_woocommerce'           => 1,
         // Core Web Vitals (CrUX)
         'crux_api_key'                 => '',
         // Debug
@@ -92,6 +125,7 @@ function fpfi_sanitize_settings($input)
         'enable_preload', 'enable_modern_format_preload',
         'enable_low_below_fold', 'exclude_avatars', 'enable_debug_badge',
         'enable_lcp_learning', 'enable_bg_preload', 'enable_loading_optim',
+        'enable_font_preload', 'enable_preconnect', 'enable_woocommerce',
     );
     foreach ($bool_keys as $key) {
         $clean[$key] = !empty($input[$key]) ? 1 : 0;
@@ -470,6 +504,7 @@ function fpfi_reset_request_flags()
     unset($GLOBALS['fpfi_tagged_count']);
     unset($GLOBALS['fpfi_high_count']);
     unset($GLOBALS['fpfi_lcp_preloaded']);
+    unset($GLOBALS['fpfi_wc_gallery_done']);
 }
 add_action('template_redirect', 'fpfi_reset_request_flags');
 
@@ -777,6 +812,15 @@ function fpfi_render_settings_page()
                                     <p class="description"><?php esc_html_e('How many posts at the top of an archive/blog/search loop get fetchpriority="high". Default: 1. Range: 1–20.', 'fetchpriority-featured-image'); ?></p>
                                 </td>
                             </tr>
+                            <?php if (function_exists('fpfi_wc_active') && fpfi_wc_active()) : ?>
+                            <tr>
+                                <th scope="row"><span class="dashicons dashicons-cart" style="color:#7f54b3;"></span> <?php esc_html_e('WooCommerce', 'fetchpriority-featured-image'); ?></th>
+                                <td>
+                                    <label><input type="checkbox" name="fpfi_settings[enable_woocommerce]" value="1" <?php checked($s['enable_woocommerce']); ?>> <?php esc_html_e('Prioritise the main product image in the single-product gallery.', 'fetchpriority-featured-image'); ?></label>
+                                    <p class="description"><?php esc_html_e('Shop and product-category pages are already covered by the archive rules above. This adds the product gallery, whose markup bypasses the standard image path.', 'fetchpriority-featured-image'); ?></p>
+                                </td>
+                            </tr>
+                            <?php endif; ?>
                         </table>
                     </div>
                 </div>
@@ -865,6 +909,32 @@ function fpfi_render_settings_page()
                                 <td>
                                     <label><input type="checkbox" name="fpfi_settings[enable_modern_format_preload]" value="1" <?php checked($s['enable_modern_format_preload']); ?>> <?php esc_html_e('Also preload AVIF/WebP variants when sibling files exist on disk.', 'fetchpriority-featured-image'); ?></label>
                                     <p class="description"><?php esc_html_e('Detects "file.avif" / "file.webp" or "file.jpg.avif" / "file.jpg.webp" siblings (works with ShortPixel, Imagify, Optimole, and similar). Browsers automatically pick the supported type.', 'fetchpriority-featured-image'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="fpfi-card">
+                    <div class="fpfi-card-head">
+                        <span class="dashicons dashicons-editor-textcolor"></span>
+                        <h2><?php esc_html_e('Fonts & connections', 'fetchpriority-featured-image'); ?></h2>
+                        <span class="fpfi-card-sub"><?php esc_html_e('For text heroes & CDNs', 'fetchpriority-featured-image'); ?></span>
+                    </div>
+                    <div class="fpfi-card-body">
+                        <table class="form-table" role="presentation">
+                            <tr>
+                                <th scope="row"><?php esc_html_e('Preload text-LCP font', 'fetchpriority-featured-image'); ?></th>
+                                <td>
+                                    <label><input type="checkbox" name="fpfi_settings[enable_font_preload]" value="1" <?php checked($s['enable_font_preload']); ?>> <?php esc_html_e('When the measured LCP is a block of text, preload the web font it uses.', 'fetchpriority-featured-image'); ?></label>
+                                    <p class="description"><?php esc_html_e('Text is the LCP on a huge number of pages. Preloading the exact font (self-hosted or Google Fonts) removes the render delay while the browser waits for it. Learned from real visitors, per template.', 'fetchpriority-featured-image'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><?php esc_html_e('CDN preconnect', 'fetchpriority-featured-image'); ?></th>
+                                <td>
+                                    <label><input type="checkbox" name="fpfi_settings[enable_preconnect]" value="1" <?php checked($s['enable_preconnect']); ?>> <?php esc_html_e('Open an early connection to the host serving your hero image or font when it is on another domain.', 'fetchpriority-featured-image'); ?></label>
+                                    <p class="description"><?php esc_html_e('Emits <link rel="preconnect"> + dns-prefetch for the exact cross-origin host the hero loads from (image CDN, Google Fonts). Saves a DNS + TLS round trip on the critical path. Same-origin heroes need nothing, so nothing is emitted.', 'fetchpriority-featured-image'); ?></p>
                                 </td>
                             </tr>
                         </table>
@@ -972,6 +1042,22 @@ function fpfi_render_settings_page()
                                 </td>
                             </tr>
                         </table>
+                    </div>
+                </div>
+
+                <div class="fpfi-card">
+                    <div class="fpfi-card-head">
+                        <span class="dashicons dashicons-migrate"></span>
+                        <h2><?php esc_html_e('Backup & migrate', 'fetchpriority-featured-image'); ?></h2>
+                    </div>
+                    <div class="fpfi-card-body">
+                        <p class="description"><?php esc_html_e('Save your configuration to a file and load it on another site. Learned LCP data and your API key are kept out of the file — those stay per-site.', 'fetchpriority-featured-image'); ?></p>
+                        <p>
+                            <a class="button" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=fpfi_export_settings'), 'fpfi_export_settings')); ?>"><span class="dashicons dashicons-download" style="vertical-align:middle;"></span> <?php esc_html_e('Export settings', 'fetchpriority-featured-image'); ?></a>
+                            <label class="button" style="cursor:pointer;"><span class="dashicons dashicons-upload" style="vertical-align:middle;"></span> <?php esc_html_e('Import settings', 'fetchpriority-featured-image'); ?><input type="file" id="fpfi-import-file" accept="application/json,.json" style="display:none;"></label>
+                            <button type="button" class="button" id="fpfi-reset-settings"><?php esc_html_e('Reset to defaults', 'fetchpriority-featured-image'); ?></button>
+                            <span id="fpfi-porting-status" style="margin-left:8px;"></span>
+                        </p>
                     </div>
                 </div>
 
@@ -1160,6 +1246,8 @@ function fpfi_enqueue_settings_assets($hook)
         'saved'       => __('Saved.', 'fetchpriority-featured-image'),
         'resetConfirm' => __('Clear all learned LCP data? Manual picks are kept.', 'fetchpriority-featured-image'),
         'error'       => __('Error.', 'fetchpriority-featured-image'),
+        'importing'   => __('Importing…', 'fetchpriority-featured-image'),
+        'settingsResetConfirm' => __('Reset all settings to their defaults? Your saved API key is kept.', 'fetchpriority-featured-image'),
     );
     $js = '
     (function($){
@@ -1209,6 +1297,33 @@ function fpfi_enqueue_settings_assets($hook)
             if(!window.confirm(D.resetConfirm)) return;
             $.post(D.ajax, {action:"fpfi_lcp_reset", nonce:D.lcpNonce})
             .done(function(){ $("#fpfi-lcp-status").text(D.saved); location.reload(); });
+        });
+
+        // ---- Backup & migrate ----
+        $("#fpfi-import-file").on("change", function(){
+            var file = this.files && this.files[0];
+            if(!file) return;
+            var $s = $("#fpfi-porting-status").text(D.importing);
+            var reader = new FileReader();
+            reader.onload = function(e){
+                $.post(D.ajax, {action:"fpfi_import_settings", nonce:D.lcpNonce, data:e.target.result})
+                .done(function(r){
+                    if(r && r.success){ $s.text((r.data && r.data.message) ? r.data.message : D.saved); location.reload(); }
+                    else { $s.text((r && r.data && r.data.message) ? r.data.message : D.error); }
+                }).fail(function(){ $s.text(D.error); });
+            };
+            reader.onerror = function(){ $s.text(D.error); };
+            reader.readAsText(file);
+            $(this).val("");
+        });
+        $("#fpfi-reset-settings").on("click", function(){
+            if(!window.confirm(D.settingsResetConfirm)) return;
+            var $s = $("#fpfi-porting-status").text(D.importing);
+            $.post(D.ajax, {action:"fpfi_reset_settings", nonce:D.lcpNonce})
+            .done(function(r){
+                if(r && r.success){ $s.text((r.data && r.data.message) ? r.data.message : D.saved); location.reload(); }
+                else { $s.text((r && r.data && r.data.message) ? r.data.message : D.error); }
+            }).fail(function(){ $s.text(D.error); });
         });
     })(jQuery);
     ';

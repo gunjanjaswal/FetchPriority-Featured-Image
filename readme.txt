@@ -5,7 +5,7 @@ Donate link: https://ko-fi.com/gunjanjaswal
 Tags: performance, core-web-vitals, lcp, fetchpriority, image-optimization
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.4.0
+Stable tag: 1.5.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -34,6 +34,12 @@ FetchPriority Featured Image is a self-learning LCP (Largest Contentful Paint) o
 * Slowest-templates leaderboard built from real-user LCP timing
 * `loading="eager"` on the LCP image and `loading="lazy"` below the fold so native lazy-loading never delays the hero
 * Preloads + prioritizes the measured LCP, including CSS `background-image`, video poster, and `<picture>` heroes
+* Text-LCP web-font preload — when the largest element is a heading or paragraph, learns the web font it used (self-hosted or Google Fonts) and preloads it
+* Cross-origin CDN preconnect — opens an early connection to the exact host serving your hero image or font, with a `dns-prefetch` fallback
+* WooCommerce — prioritizes the main image in the single-product gallery (shop and product-category pages are covered by the archive rules)
+* Settings import/export to move one tuned configuration across sites, plus a reset-to-defaults button
+* WP-CLI commands: `wp fpfi lcp list`, `wp fpfi lcp reset`, and `wp fpfi settings-export/import/reset`
+* Translation-ready — ships a full `.pot` template for localisation into any language
 * Per-template modes: Auto, Learned-only, Manual-only, Off
 * Tabbed settings screen (Smart LCP / Targeting / Preload / Diagnostics) with a clean, flat interface
 * Automatically adds `fetchpriority="high"` to the hero / featured image
@@ -104,6 +110,15 @@ View the HTML source and look for `fetchpriority="high"` on the hero image and a
 
 == Changelog ==
 
+= 1.5.0 =
+* NEW: WooCommerce support — the main image in the single-product gallery now gets prioritised as the hero. Shop and product-category pages were already covered by the archive rules; this fills the one gap, since the gallery builds its own markup. Toggle it under Targeting (shown only when WooCommerce is active).
+* NEW: Text-LCP font preload — on the many pages where the largest element is a heading or paragraph rather than an image, the plugin now learns which web font that text used and preloads it. Works with self-hosted fonts and Google Fonts, per template, from the same real-visitor measurements.
+* NEW: CDN preconnect — when your hero image or font lives on another host (an image CDN, Google Fonts), the plugin opens the connection early with `<link rel="preconnect">` plus a `dns-prefetch` fallback, matched to the exact cross-origin host. Same-origin heroes emit nothing.
+* NEW: Backup & migrate — export your settings to a JSON file and import them on another site. Great for rolling one tuned configuration across a fleet. Learned data and your API key stay per-site and are kept out of the file. There's also a "Reset to defaults" button.
+* NEW: WP-CLI — `wp fpfi lcp list`, `wp fpfi lcp reset`, and `wp fpfi settings-export/import/reset` for reading learned data and scripting deployments.
+* Full translation template (.pot) shipped so the plugin can be localised into any language via translate.wordpress.org or a tool like Poedit.
+* Friendlier template labels for WooCommerce (Product pages, Shop, Product categories) in the learning tables.
+
 = 1.4.0 =
 * NEW: Self-learning LCP — a lightweight PerformanceObserver beacon reports the real Largest Contentful Paint element per template; once enough samples are collected the plugin auto-preloads and tags that exact image with `fetchpriority="high"`.
 * NEW: CSS `background-image` hero support — preloads the measured/manual background image, a blind spot for most performance plugins.
@@ -159,6 +174,9 @@ View the HTML source and look for `fetchpriority="high"` on the hero image and a
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.5.0 =
+Adds WooCommerce product-gallery support, web-font preload for text heroes, cross-origin CDN preconnect, settings import/export, WP-CLI commands, and a full translation template. Backward-compatible; the new options default on but only act where they apply.
 
 = 1.4.0 =
 Major update: self-learning LCP from real visitors, CSS background-image preload, visual LCP picker, and a built-in Core Web Vitals before/after report. Backward-compatible; learning is on by default at a 20% sample rate.

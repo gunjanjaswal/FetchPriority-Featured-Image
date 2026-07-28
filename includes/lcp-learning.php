@@ -108,6 +108,12 @@ function fpfi_lcp_collect($req)
     $template = isset($params['template']) ? sanitize_text_field($params['template']) : '';
     $url      = isset($params['url']) ? esc_url_raw($params['url']) : '';
     $is_bg    = !empty($params['is_bg']) ? 1 : 0;
+
+    // Text LCP: record the web font used, on its own voting track.
+    if (!empty($params['is_font'])) {
+        return fpfi_lcp_collect_font($template, $url, $params);
+    }
+
     $selector = isset($params['selector']) ? substr(sanitize_text_field($params['selector']), 0, 300) : '';
     $tag      = isset($params['tag']) ? sanitize_key($params['tag']) : '';
     $lcp_ms   = isset($params['lcp_ms']) ? max(0, min(120000, (int) $params['lcp_ms'])) : 0;

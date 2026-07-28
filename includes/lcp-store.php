@@ -116,25 +116,30 @@ function fpfi_template_label($key)
         'tax:post_tag' => __('Tag archives', 'fetchpriority-featured-image'),
     );
     if (isset($labels[$key])) {
-        return $labels[$key];
-    }
-    if (strpos($key, 'single:') === 0) {
+        $label = $labels[$key];
+    } elseif (strpos($key, 'single:') === 0) {
         /* translators: %s: post type */
-        return sprintf(__('Single: %s', 'fetchpriority-featured-image'), substr($key, 7));
-    }
-    if (strpos($key, 'cpt_archive:') === 0) {
+        $label = sprintf(__('Single: %s', 'fetchpriority-featured-image'), substr($key, 7));
+    } elseif (strpos($key, 'cpt_archive:') === 0) {
         /* translators: %s: post type */
-        return sprintf(__('Archive: %s', 'fetchpriority-featured-image'), substr($key, 12));
-    }
-    if (strpos($key, 'page_tpl:') === 0) {
+        $label = sprintf(__('Archive: %s', 'fetchpriority-featured-image'), substr($key, 12));
+    } elseif (strpos($key, 'page_tpl:') === 0) {
         /* translators: %s: template slug */
-        return sprintf(__('Page template: %s', 'fetchpriority-featured-image'), substr($key, 9));
-    }
-    if (strpos($key, 'tax:') === 0) {
+        $label = sprintf(__('Page template: %s', 'fetchpriority-featured-image'), substr($key, 9));
+    } elseif (strpos($key, 'tax:') === 0) {
         /* translators: %s: taxonomy */
-        return sprintf(__('Taxonomy: %s', 'fetchpriority-featured-image'), substr($key, 4));
+        $label = sprintf(__('Taxonomy: %s', 'fetchpriority-featured-image'), substr($key, 4));
+    } else {
+        $label = $key;
     }
-    return $key;
+
+    /**
+     * Filter the human-readable label for a template key.
+     *
+     * @param string $label Resolved label.
+     * @param string $key   Template key.
+     */
+    return apply_filters('fpfi_template_label', $label, $key);
 }
 
 /* -------------------------------------------------------------------------
@@ -220,7 +225,7 @@ function fpfi_lcp_reset_learned($hard = false)
     }
     $all = fpfi_lcp_get_all();
     foreach ($all as $key => $rec) {
-        unset($all[$key]['learned'], $all[$key]['candidates']);
+        unset($all[$key]['learned'], $all[$key]['candidates'], $all[$key]['font'], $all[$key]['font_cands']);
     }
     fpfi_lcp_save_all($all);
 }

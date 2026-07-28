@@ -13,12 +13,19 @@ FetchPriority Featured Image is a simple plugin that helps improve your website'
 
 ### Key Features
 
+* **Self-learning LCP** — a tiny PerformanceObserver beacon measures the real Largest Contentful Paint element from your visitors and auto-prioritizes it per template, instead of guessing
+* **CSS `background-image` hero support** — preloads the measured background image, a blind spot for most performance plugins
+* **Text-LCP web-font preload** — when the largest element is a heading or paragraph, learns the web font it used (self-hosted or Google Fonts) and preloads it
+* **Cross-origin CDN preconnect** — opens an early connection to the exact host serving your hero image or font, with a `dns-prefetch` fallback
+* **WooCommerce** — prioritizes the main image in the single-product gallery (shop and product-category pages are covered by the archive rules)
 * Automatically adds `fetchpriority="high"` to the hero / featured image
 * Optional `fetchpriority="low"` for below-fold images — paired complement that tells the browser to defer non-critical loads
 * `<link rel="preload" as="image">` for the hero featured image on singular pages — strongest LCP signal
 * **AVIF / WebP detection** — when a sibling `.avif` / `.webp` file exists on disk, extra `<link rel="preload" type="image/avif|image/webp">` tags are emitted so browsers pick the supported modern format automatically. Works with ShortPixel, Imagify, Optimole, and similar conversion plugins.
 * **Theme presets** — auto-detects Astra, GeneratePress, Kadence, Divi, and Hello Elementor and excludes their site-logo / header-image classes so the priority budget hits the real hero
 * **Avatar / Gravatar exclusion** — never tags images with class `avatar` / `gravatar` or hosted on `gravatar.com`
+* **Settings import/export** and **WP-CLI** commands (`wp fpfi lcp list`, `wp fpfi settings-export/import/reset`) for managing many sites
+* **Translation-ready** — ships a full `.pot` template for localisation into any language
 * Settings page (Settings → FetchPriority) for per-context toggles, first-N control, preload, and exclusions
 * Admin-bar debug badge showing how many images were tagged on the current page (total + how many got `high`)
 * Compatible with most WordPress themes including **Divi**, **Elementor**, **Astra**, **GeneratePress**, **Kadence**, and any theme using standard `the_post_thumbnail()` / `wp_get_attachment_image()`
@@ -184,6 +191,20 @@ Contributions are welcome! Feel free to:
 If you find this plugin useful, consider [supporting on Ko-fi](https://ko-fi.com/gunjanjaswal) to back the development.
 
 ## Changelog
+
+### Version 1.5.0
+* **WooCommerce** — the main image in the single-product gallery is now prioritized as the hero. Shop and product-category pages were already covered by the archive rules; this fills the one gap, since the gallery builds its own markup.
+* **Text-LCP web-font preload** — on pages where the largest element is text, the plugin learns the web font that text used and preloads it. Works with self-hosted fonts and Google Fonts, per template.
+* **Cross-origin CDN preconnect** — when the hero image or font lives on another host, an early `<link rel="preconnect">` (plus `dns-prefetch` fallback) is emitted for that exact host. Same-origin heroes emit nothing.
+* **Settings import/export** — save your configuration to a JSON file and load it on another site; learned data and the API key stay per-site. Plus a reset-to-defaults button.
+* **WP-CLI** — `wp fpfi lcp list`, `wp fpfi lcp reset`, and `wp fpfi settings-export/import/reset`.
+* **Translation template** — ships a full `.pot` so the plugin can be localised into any language.
+
+### Version 1.4.0
+* **Self-learning LCP** — a lightweight PerformanceObserver beacon reports the real LCP element per template; once enough samples land, the plugin auto-preloads and tags that exact image.
+* **CSS `background-image` hero support**, **visual LCP picker**, and a **Core Web Vitals before/after report** via the Chrome UX Report (CrUX) API.
+* **Per-template control** (Auto / Learned-only / Manual-only / Off), **PageSpeed audit** from the admin, **oversized-LCP detection**, and a **slowest-templates leaderboard**.
+* Loading optimization (`eager` on the hero, `lazy` below the fold) and a redesigned tabbed settings screen.
 
 ### Version 1.3.0
 * Added Settings page under **Settings → FetchPriority** (Contexts / Preload / Below-fold / Exclusions / Theme preset / Debug).

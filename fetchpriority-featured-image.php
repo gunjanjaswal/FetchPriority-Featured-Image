@@ -3,7 +3,7 @@
  * Plugin Name: FetchPriority Featured Image
  * Plugin URI: https://wordpress.org/plugins/fetchpriority-featured-image/
  * Description: Self-learning LCP optimizer. Measures the real Largest Contentful Paint element from your visitors and auto-applies fetchpriority="high" + preload to it (foreground or CSS background), with a visual LCP picker, per-template control, AVIF/WebP detection, and a built-in Core Web Vitals before/after report.
- * Version: 1.5.1
+ * Version: 1.5.2
  * Author: Gunjan Jaswal
  * Author URI: https://gunjanjaswal.me
  * License: GPL v2 or later
@@ -19,7 +19,7 @@ if (!defined('WPINC')) {
     die;
 }
 
-define('FETCHPRIORITY_FEATURED_IMAGE_VERSION', '1.5.1');
+define('FETCHPRIORITY_FEATURED_IMAGE_VERSION', '1.5.2');
 define('FPFI_PLUGIN_FILE', __FILE__);
 
 /* -------------------------------------------------------------------------

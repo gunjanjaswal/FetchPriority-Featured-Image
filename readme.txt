@@ -5,7 +5,7 @@ Donate link: https://ko-fi.com/gunjanjaswal
 Tags: performance, core-web-vitals, lcp, fetchpriority, image-optimization
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.5.1
+Stable tag: 1.5.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -110,6 +110,9 @@ View the HTML source and look for `fetchpriority="high"` on the hero image and a
 
 == Changelog ==
 
+= 1.5.2 =
+* IMPROVED: Redesigned the settings toggle switches — larger, with a shadowed knob, a smooth slide animation, a cleaner off state, and a proper keyboard focus ring. Purely visual; no settings or behaviour changed.
+
 = 1.5.1 =
 * FIX: The "Measure Core Web Vitals" and "Run PageSpeed audit" buttons (plus "Clear learned data" and the new import/reset controls) did nothing when clicked. The admin script bound its click handlers before the page had finished loading, so they never attached. Wrapped the script so it runs after the DOM is ready.
 * IMPROVED: PageSpeed audit now falls back to a keyless request if your Google API key is rejected — handy when the key was created only for the Chrome UX Report and doesn't have the PageSpeed Insights API enabled.
@@ -179,6 +182,9 @@ View the HTML source and look for `fetchpriority="high"` on the hero image and a
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.5.2 =
+Polished the settings toggle switches. Visual only.
 
 = 1.5.1 =
 Fixes the Core Web Vitals and PageSpeed audit buttons, which weren't responding to clicks. Recommended for anyone using the Diagnostics tab.

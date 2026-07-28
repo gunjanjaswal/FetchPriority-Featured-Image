@@ -192,6 +192,9 @@ If you find this plugin useful, consider [supporting on Ko-fi](https://ko-fi.com
 
 ## Changelog
 
+### Version 1.5.2
+* **Improved:** redesigned the settings toggle switches — larger, shadowed knob, smooth slide animation, cleaner off state, and a proper keyboard focus ring. Visual only.
+
 ### Version 1.5.1
 * **Fix:** the "Measure Core Web Vitals" and "Run PageSpeed audit" buttons (and "Clear learned data" / import / reset) did nothing when clicked — the admin script bound its handlers before the DOM was ready. Now wrapped in a ready callback.
 * **Improved:** PageSpeed audit falls back to a keyless request when a Google API key is rejected (e.g. a key enabled only for the Chrome UX Report).

@@ -2,9 +2,9 @@
 # This file is distributed under the same license as the FetchPriority Featured Image plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: FetchPriority Featured Image 1.5.4\n"
+"Project-Id-Version: FetchPriority Featured Image 1.6.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/fetchpriority-featured-image\n"
-"POT-Creation-Date: 2026-07-28 09:37+0530\n"
+"POT-Creation-Date: 2026-07-29 18:08+0530\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Gunjan Jaswal <hello@gunjanjaswal.me>\n"
 "Language-Team: Gunjan Jaswal <hello@gunjanjaswal.me>\n"
@@ -18,542 +18,542 @@ msgstr ""
 "X-Poedit-SearchPath-0: .\n"
 
 #. translators: 1: total tagged images, 2: number tagged with priority=high
-#: fetchpriority-featured-image.php:650
+#: fetchpriority-featured-image.php:651
 #, php-format
 msgid "FetchPriority: %1$d (high: %2$d)"
 msgstr ""
 
-#: fetchpriority-featured-image.php:656
+#: fetchpriority-featured-image.php:657
 msgid "Images tagged with fetchpriority on this page (click to open settings)."
 msgstr ""
 
-#: fetchpriority-featured-image.php:669 fetchpriority-featured-image.php:700
+#: fetchpriority-featured-image.php:670 fetchpriority-featured-image.php:701
 msgid "FetchPriority Featured Image"
 msgstr ""
 
-#: fetchpriority-featured-image.php:670
+#: fetchpriority-featured-image.php:671
 msgid "FetchPriority"
 msgstr ""
 
-#: fetchpriority-featured-image.php:686
+#: fetchpriority-featured-image.php:687
 msgid "Auto-detect"
 msgstr ""
 
-#: fetchpriority-featured-image.php:692
+#: fetchpriority-featured-image.php:693
 msgid "Generic (no theme extras)"
 msgstr ""
 
-#: fetchpriority-featured-image.php:703
+#: fetchpriority-featured-image.php:704
 msgid "Self-learning LCP optimizer — it measures the real Largest Contentful Paint element from your visitors and automatically prioritises it. No guessing."
 msgstr ""
 
-#: fetchpriority-featured-image.php:705 fetchpriority-featured-image.php:1341
+#: fetchpriority-featured-image.php:706 fetchpriority-featured-image.php:1348
 msgid "Support on Ko-fi"
 msgstr ""
 
-#: fetchpriority-featured-image.php:706
+#: fetchpriority-featured-image.php:707
 msgid "GitHub"
 msgstr ""
 
-#: fetchpriority-featured-image.php:707
+#: fetchpriority-featured-image.php:708
 msgid "Support"
 msgstr ""
 
-#: fetchpriority-featured-image.php:712
+#: fetchpriority-featured-image.php:713
 msgid "Smart LCP"
 msgstr ""
 
-#: fetchpriority-featured-image.php:713
+#: fetchpriority-featured-image.php:714
 msgid "Targeting"
 msgstr ""
 
-#: fetchpriority-featured-image.php:714
+#: fetchpriority-featured-image.php:715
 msgid "Preload"
 msgstr ""
 
-#: fetchpriority-featured-image.php:715
+#: fetchpriority-featured-image.php:716
 msgid "Diagnostics"
 msgstr ""
 
-#: fetchpriority-featured-image.php:727
+#: fetchpriority-featured-image.php:728
 msgid "Self-learning LCP"
 msgstr ""
 
-#: fetchpriority-featured-image.php:728
+#: fetchpriority-featured-image.php:729
 msgid "The headline feature"
 msgstr ""
 
-#: fetchpriority-featured-image.php:733
+#: fetchpriority-featured-image.php:734
 msgid "Learn real LCP"
 msgstr ""
 
-#: fetchpriority-featured-image.php:735
+#: fetchpriority-featured-image.php:736
 msgid "Measure the real Largest Contentful Paint element from visitors and auto-prioritise it."
 msgstr ""
 
-#: fetchpriority-featured-image.php:736
+#: fetchpriority-featured-image.php:737
 msgid "A tiny script reports the actual LCP image per template. Once enough samples are collected, the plugin preloads and tags that exact image (foreground or CSS background) instead of guessing — and self-corrects as your site changes."
 msgstr ""
 
-#: fetchpriority-featured-image.php:740
+#: fetchpriority-featured-image.php:741
 msgid "Sample rate"
 msgstr ""
 
-#: fetchpriority-featured-image.php:743
+#: fetchpriority-featured-image.php:744
 msgid "Percentage of page views that load the measurement script. Lower = lighter; higher = faster learning. Default: 20%."
 msgstr ""
 
-#: fetchpriority-featured-image.php:747
+#: fetchpriority-featured-image.php:748
 msgid "Background-image preload"
 msgstr ""
 
-#: fetchpriority-featured-image.php:749
+#: fetchpriority-featured-image.php:750
 msgid "Preload the hero when the LCP is a CSS background-image (sliders, hero sections)."
 msgstr ""
 
-#: fetchpriority-featured-image.php:750
+#: fetchpriority-featured-image.php:751
 msgid "CSS background heroes are a blind spot for most performance plugins — the browser discovers them late. This preloads the measured/manual background URL."
 msgstr ""
 
-#: fetchpriority-featured-image.php:754
+#: fetchpriority-featured-image.php:755
 msgid "Loading optimization"
 msgstr ""
 
-#: fetchpriority-featured-image.php:756
+#: fetchpriority-featured-image.php:757
 msgid "Force loading=\"eager\" on the LCP image and loading=\"lazy\" on below-fold images."
 msgstr ""
 
-#: fetchpriority-featured-image.php:757
+#: fetchpriority-featured-image.php:758
 msgid "Stops native lazy-loading from delaying your hero, and defers everything below it."
 msgstr ""
 
-#: fetchpriority-featured-image.php:761
+#: fetchpriority-featured-image.php:762
 msgid "Visual picker"
 msgstr ""
 
-#: fetchpriority-featured-image.php:763
+#: fetchpriority-featured-image.php:764
 msgid "Prefer to choose manually? On the front end, open the admin-bar menu and click \"Pick LCP element\", then click your hero image. It is saved as a manual override for that template."
 msgstr ""
 
-#: fetchpriority-featured-image.php:773
+#: fetchpriority-featured-image.php:774
 msgid "Per-template LCP targets"
 msgstr ""
 
-#: fetchpriority-featured-image.php:776
+#: fetchpriority-featured-image.php:777
 msgid "What the plugin will prioritise on each template it has seen. \"Auto\" uses a manual pick if set, else the learned LCP, else the featured-image guess."
 msgstr ""
 
-#: fetchpriority-featured-image.php:779
+#: fetchpriority-featured-image.php:780
 msgid "Clear learned data"
 msgstr ""
 
-#: fetchpriority-featured-image.php:793
+#: fetchpriority-featured-image.php:794
 msgid "Where to apply"
 msgstr ""
 
-#: fetchpriority-featured-image.php:798
+#: fetchpriority-featured-image.php:799
 msgid "Apply on"
 msgstr ""
 
-#: fetchpriority-featured-image.php:801
+#: fetchpriority-featured-image.php:802
 msgid "Single posts & pages"
 msgstr ""
 
-#: fetchpriority-featured-image.php:802
+#: fetchpriority-featured-image.php:803
 msgid "Blog home"
 msgstr ""
 
-#: fetchpriority-featured-image.php:803
+#: fetchpriority-featured-image.php:804
 msgid "Archive pages (category, tag, author, date, CPT)"
 msgstr ""
 
-#: fetchpriority-featured-image.php:804 includes/lcp-store.php:109
+#: fetchpriority-featured-image.php:805 includes/lcp-store.php:109
 msgid "Search results"
 msgstr ""
 
-#: fetchpriority-featured-image.php:809
+#: fetchpriority-featured-image.php:810
 msgid "First N posts on archives"
 msgstr ""
 
-#: fetchpriority-featured-image.php:812
+#: fetchpriority-featured-image.php:813
 msgid "How many posts at the top of an archive/blog/search loop get fetchpriority=\"high\". Default: 1. Range: 1–20."
 msgstr ""
 
-#: fetchpriority-featured-image.php:817
+#: fetchpriority-featured-image.php:818
 msgid "WooCommerce"
 msgstr ""
 
-#: fetchpriority-featured-image.php:819
+#: fetchpriority-featured-image.php:820
 msgid "Prioritise the main product image in the single-product gallery."
 msgstr ""
 
-#: fetchpriority-featured-image.php:820
+#: fetchpriority-featured-image.php:821
 msgid "Shop and product-category pages are already covered by the archive rules above. This adds the product gallery, whose markup bypasses the standard image path."
 msgstr ""
 
-#: fetchpriority-featured-image.php:831
+#: fetchpriority-featured-image.php:832
 msgid "Below-fold priority"
 msgstr ""
 
-#: fetchpriority-featured-image.php:836
+#: fetchpriority-featured-image.php:837
 msgid "fetchpriority=\"low\" below the fold"
 msgstr ""
 
-#: fetchpriority-featured-image.php:838
+#: fetchpriority-featured-image.php:839
 msgid "After the hero (or first-N posts on archives), tag remaining images with fetchpriority=\"low\"."
 msgstr ""
 
-#: fetchpriority-featured-image.php:839
+#: fetchpriority-featured-image.php:840
 msgid "Tells the browser to defer below-fold work so the hero loads faster. Paired complement to the high tag."
 msgstr ""
 
-#: fetchpriority-featured-image.php:849
+#: fetchpriority-featured-image.php:850
 msgid "Exclusions"
 msgstr ""
 
-#: fetchpriority-featured-image.php:854
+#: fetchpriority-featured-image.php:855
 msgid "Skip avatars"
 msgstr ""
 
-#: fetchpriority-featured-image.php:856
+#: fetchpriority-featured-image.php:857
 msgid "Never tag images with class \"avatar\"/\"gravatar\" or hosted on gravatar.com."
 msgstr ""
 
-#: fetchpriority-featured-image.php:857
+#: fetchpriority-featured-image.php:858
 msgid "Author avatars are rarely LCP candidates and would waste the priority budget."
 msgstr ""
 
-#: fetchpriority-featured-image.php:867 fetchpriority-featured-image.php:875
+#: fetchpriority-featured-image.php:868 fetchpriority-featured-image.php:876
 msgid "Theme preset"
 msgstr ""
 
 #. translators: %s: detected theme key
-#: fetchpriority-featured-image.php:870
+#: fetchpriority-featured-image.php:871
 #, php-format
 msgid "Detected: %s"
 msgstr ""
 
-#: fetchpriority-featured-image.php:882
+#: fetchpriority-featured-image.php:883
 msgid "Presets add theme-specific logo/header class exclusions so the priority budget is spent on the real hero image. Divi & Elementor already work out of the box."
 msgstr ""
 
-#: fetchpriority-featured-image.php:896
+#: fetchpriority-featured-image.php:897
 msgid "Preload (hero featured image)"
 msgstr ""
 
-#: fetchpriority-featured-image.php:901
+#: fetchpriority-featured-image.php:902
 msgid "Preload featured image"
 msgstr ""
 
-#: fetchpriority-featured-image.php:903
+#: fetchpriority-featured-image.php:904
 msgid "Emit <link rel=\"preload\" as=\"image\"> in <head> on singular pages."
 msgstr ""
 
-#: fetchpriority-featured-image.php:904
+#: fetchpriority-featured-image.php:905
 msgid "Strongest LCP signal. The learned/manual LCP is used when available, otherwise the featured image."
 msgstr ""
 
-#: fetchpriority-featured-image.php:908
+#: fetchpriority-featured-image.php:909
 msgid "Modern format preload"
 msgstr ""
 
-#: fetchpriority-featured-image.php:910
+#: fetchpriority-featured-image.php:911
 msgid "Also preload AVIF/WebP variants when sibling files exist on disk."
 msgstr ""
 
-#: fetchpriority-featured-image.php:911
+#: fetchpriority-featured-image.php:912
 msgid "Detects \"file.avif\" / \"file.webp\" or \"file.jpg.avif\" / \"file.jpg.webp\" siblings (works with ShortPixel, Imagify, Optimole, and similar). Browsers automatically pick the supported type."
 msgstr ""
 
-#: fetchpriority-featured-image.php:921
+#: fetchpriority-featured-image.php:922
 msgid "Fonts & connections"
 msgstr ""
 
-#: fetchpriority-featured-image.php:922
+#: fetchpriority-featured-image.php:923
 msgid "For text heroes & CDNs"
 msgstr ""
 
-#: fetchpriority-featured-image.php:927
+#: fetchpriority-featured-image.php:928
 msgid "Preload text-LCP font"
 msgstr ""
 
-#: fetchpriority-featured-image.php:929
+#: fetchpriority-featured-image.php:930
 msgid "When the measured LCP is a block of text, preload the web font it uses."
 msgstr ""
 
-#: fetchpriority-featured-image.php:930
+#: fetchpriority-featured-image.php:931
 msgid "Text is the LCP on a huge number of pages. Preloading the exact font (self-hosted or Google Fonts) removes the render delay while the browser waits for it. Learned from real visitors, per template."
 msgstr ""
 
-#: fetchpriority-featured-image.php:934
+#: fetchpriority-featured-image.php:935
 msgid "CDN preconnect"
 msgstr ""
 
-#: fetchpriority-featured-image.php:936
+#: fetchpriority-featured-image.php:937
 msgid "Open an early connection to the host serving your hero image or font when it is on another domain."
 msgstr ""
 
-#: fetchpriority-featured-image.php:937
+#: fetchpriority-featured-image.php:938
 msgid "Emits <link rel=\"preconnect\"> + dns-prefetch for the exact cross-origin host the hero loads from (image CDN, Google Fonts). Saves a DNS + TLS round trip on the critical path. Same-origin heroes need nothing, so nothing is emitted."
 msgstr ""
 
-#: fetchpriority-featured-image.php:951
+#: fetchpriority-featured-image.php:952
 msgid "Google API key"
 msgstr ""
 
-#: fetchpriority-featured-image.php:956
+#: fetchpriority-featured-image.php:957
 msgid "CrUX / PSI API key"
 msgstr ""
 
 #. translators: %s: link to Google API console
-#: fetchpriority-featured-image.php:963
+#: fetchpriority-featured-image.php:964
 #, php-format
 msgid "Free Google API key with the <em>Chrome UX Report API</em> (and optionally <em>PageSpeed Insights API</em>) enabled. Get one at %s. PageSpeed also works without a key at low volume."
 msgstr ""
 
-#: fetchpriority-featured-image.php:977
+#: fetchpriority-featured-image.php:978
 msgid "Core Web Vitals — before / after"
 msgstr ""
 
-#: fetchpriority-featured-image.php:980
+#: fetchpriority-featured-image.php:981
 msgid "Real-world field data from the Chrome UX Report. The first measurement is saved as your baseline; later runs show the change."
 msgstr ""
 
-#: fetchpriority-featured-image.php:982
+#: fetchpriority-featured-image.php:983
 msgid "Measure Core Web Vitals"
 msgstr ""
 
-#: fetchpriority-featured-image.php:983
+#: fetchpriority-featured-image.php:984
 msgid "Set current as new baseline"
 msgstr ""
 
-#: fetchpriority-featured-image.php:998
+#: fetchpriority-featured-image.php:999
 msgid "PageSpeed audit (Lighthouse lab)"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1001
+#: fetchpriority-featured-image.php:1002
 msgid "Run Google PageSpeed Insights on any URL. Shows the score, LCP, page weight, image-saving opportunities, and Google's own detected LCP element."
 msgstr ""
 
-#: fetchpriority-featured-image.php:1005
+#: fetchpriority-featured-image.php:1006 includes/dashboard.php:61
 msgid "Mobile"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1006
+#: fetchpriority-featured-image.php:1007 includes/dashboard.php:62
 msgid "Desktop"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1008
+#: fetchpriority-featured-image.php:1009
 msgid "Run PageSpeed audit"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1022
+#: fetchpriority-featured-image.php:1023
 msgid "Slowest templates (real-user LCP)"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1025
+#: fetchpriority-featured-image.php:1026
 msgid "Measured from your visitors. Sorted slowest first — your optimization to-do list."
 msgstr ""
 
-#: fetchpriority-featured-image.php:1033
+#: fetchpriority-featured-image.php:1034
 msgid "Debug"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1038
+#: fetchpriority-featured-image.php:1039
 msgid "Admin-bar badge"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1040
+#: fetchpriority-featured-image.php:1041
 msgid "Show a badge on the front-end admin bar with tagged-image counts."
 msgstr ""
 
-#: fetchpriority-featured-image.php:1041
+#: fetchpriority-featured-image.php:1042
 msgid "Visible only to users with the manage_options capability."
 msgstr ""
 
-#: fetchpriority-featured-image.php:1051
+#: fetchpriority-featured-image.php:1052
 msgid "Backup & migrate"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1054
+#: fetchpriority-featured-image.php:1055
 msgid "Save your configuration to a file and load it on another site. Learned LCP data and your API key are kept out of the file — those stay per-site."
 msgstr ""
 
-#: fetchpriority-featured-image.php:1056
+#: fetchpriority-featured-image.php:1057
 msgid "Export settings"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1057
+#: fetchpriority-featured-image.php:1058
 msgid "Import settings"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1058
+#: fetchpriority-featured-image.php:1059
 msgid "Reset to defaults"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1067
+#: fetchpriority-featured-image.php:1068
 msgid "Save changes"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1068
+#: fetchpriority-featured-image.php:1069
 msgid "Changes apply to the front end immediately after saving."
 msgstr ""
 
-#: fetchpriority-featured-image.php:1082
+#: fetchpriority-featured-image.php:1083
 msgid "No templates recorded yet. Browse your site (with Smart LCP enabled) or use the visual picker, and entries will appear here."
 msgstr ""
 
-#: fetchpriority-featured-image.php:1087
+#: fetchpriority-featured-image.php:1088
 msgid "Auto"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1088
+#: fetchpriority-featured-image.php:1089
 msgid "Learned only"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1089
+#: fetchpriority-featured-image.php:1090
 msgid "Manual only"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1090
+#: fetchpriority-featured-image.php:1091
 msgid "Off"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1096 fetchpriority-featured-image.php:1197
+#: fetchpriority-featured-image.php:1097 fetchpriority-featured-image.php:1198
 msgid "Template"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1097
+#: fetchpriority-featured-image.php:1098
 msgid "Effective target"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1098
+#: fetchpriority-featured-image.php:1099
 msgid "Source"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1099 fetchpriority-featured-image.php:1200
+#: fetchpriority-featured-image.php:1100 fetchpriority-featured-image.php:1201
 msgid "Samples"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1100
+#: fetchpriority-featured-image.php:1101
 msgid "Image sizing"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1101
+#: fetchpriority-featured-image.php:1102
 msgid "Mode"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1117
+#: fetchpriority-featured-image.php:1118
 msgid "CSS background image"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1120
+#: fetchpriority-featured-image.php:1121
 msgid "background"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1122
+#: fetchpriority-featured-image.php:1123
 msgid "Featured-image guess (fallback)"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1135
+#: fetchpriority-featured-image.php:1136
 msgid "LCP image is larger than it displays — serving wasted bytes."
 msgstr ""
 
 #. translators: 1: natural width, 2: recommended width
-#: fetchpriority-featured-image.php:1139
+#: fetchpriority-featured-image.php:1140
 #, php-format
 msgid "%1$dpx → resize to ~%2$dpx"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1145
+#: fetchpriority-featured-image.php:1146
 msgid "OK"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1184
+#: fetchpriority-featured-image.php:1185
 msgid "No timing data yet. Once visitors browse your site (with Smart LCP enabled), measured LCP times appear here."
 msgstr ""
 
-#: fetchpriority-featured-image.php:1198
+#: fetchpriority-featured-image.php:1199
 msgid "Avg LCP"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1199
+#: fetchpriority-featured-image.php:1200
 msgid "Worst LCP"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1244
+#: fetchpriority-featured-image.php:1245 includes/dashboard.php:94
 msgid "Measuring…"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1245
+#: fetchpriority-featured-image.php:1246 includes/dashboard.php:95
 msgid "Running Lighthouse (up to a minute)…"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1246
+#: fetchpriority-featured-image.php:1247
 msgid "Saved."
 msgstr ""
 
-#: fetchpriority-featured-image.php:1247
+#: fetchpriority-featured-image.php:1248
 msgid "Clear all learned LCP data? Manual picks are kept."
 msgstr ""
 
-#: fetchpriority-featured-image.php:1248
+#: fetchpriority-featured-image.php:1249 includes/dashboard.php:96
 msgid "Error."
 msgstr ""
 
-#: fetchpriority-featured-image.php:1249
+#: fetchpriority-featured-image.php:1250
 msgid "Importing…"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1250
+#: fetchpriority-featured-image.php:1251
 msgid "Reset all settings to their defaults? Your saved API key is kept."
 msgstr ""
 
-#: fetchpriority-featured-image.php:1340
+#: fetchpriority-featured-image.php:1347
 msgid "Settings"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1350
+#: fetchpriority-featured-image.php:1357
 msgid "Plugin Support"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1351
+#: fetchpriority-featured-image.php:1358
 msgid "Contact Developer"
 msgstr ""
 
 #. translators: %s: Link to Ko-fi support page
-#: fetchpriority-featured-image.php:1400
+#: fetchpriority-featured-image.php:1407
 #, php-format
 msgid "Thank you for using FetchPriority Featured Image! If you find it useful, please consider %s."
 msgstr ""
 
-#: fetchpriority-featured-image.php:1419
+#: fetchpriority-featured-image.php:1426
 msgid "Security check failed"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1469
+#: fetchpriority-featured-image.php:1476
 msgid "Self-learning LCP — measures the real Largest Contentful Paint element from your visitors and auto-prioritises it."
 msgstr ""
 
-#: fetchpriority-featured-image.php:1470
+#: fetchpriority-featured-image.php:1477
 msgid "Visual LCP picker — click your hero on the front end to lock it in per template."
 msgstr ""
 
-#: fetchpriority-featured-image.php:1471
+#: fetchpriority-featured-image.php:1478
 msgid "Core Web Vitals report + one-click PageSpeed (Lighthouse) audit, right in the dashboard."
 msgstr ""
 
-#: fetchpriority-featured-image.php:1472
+#: fetchpriority-featured-image.php:1479
 msgid "Oversized-image warnings, CSS background-image preload, and a slowest-templates leaderboard."
 msgstr ""
 
 #. translators: %s: version number
-#: fetchpriority-featured-image.php:1500
+#: fetchpriority-featured-image.php:1507
 #, php-format
 msgid "FetchPriority Featured Image %s — what's new"
 msgstr ""
 
-#: fetchpriority-featured-image.php:1512
+#: fetchpriority-featured-image.php:1519
 msgid "Open settings"
 msgstr ""
 
@@ -561,60 +561,92 @@ msgstr ""
 msgid "Add a CrUX API key first."
 msgstr ""
 
-#: includes/crux.php:89
+#: includes/crux.php:95
 msgid "No CrUX field data for this origin yet (low traffic). Try again later."
 msgstr ""
 
-#: includes/crux.php:92
+#: includes/crux.php:98
 msgid "CrUX API request failed."
 msgstr ""
 
-#: includes/crux.php:116 includes/picker.php:72 includes/picker.php:108
-#: includes/picker.php:126 includes/psi.php:99
+#: includes/crux.php:122 includes/picker.php:72 includes/picker.php:108
+#: includes/picker.php:126 includes/psi.php:132
 msgid "Permission denied."
 msgstr ""
 
-#: includes/crux.php:119 includes/picker.php:75 includes/picker.php:111
-#: includes/picker.php:129 includes/psi.php:102
+#: includes/crux.php:125 includes/picker.php:75 includes/picker.php:111
+#: includes/picker.php:129 includes/psi.php:135
 msgid "Security check failed."
 msgstr ""
 
-#: includes/crux.php:178
+#: includes/crux.php:184
 msgid "No data yet. Click \"Measure Core Web Vitals\" to pull field data from the Chrome UX Report."
 msgstr ""
 
-#: includes/crux.php:182
+#: includes/crux.php:188
 msgid "LCP (loading)"
 msgstr ""
 
-#: includes/crux.php:183
+#: includes/crux.php:189
 msgid "INP (interactivity)"
 msgstr ""
 
-#: includes/crux.php:184
+#: includes/crux.php:190
 msgid "CLS (stability)"
 msgstr ""
 
-#: includes/crux.php:219
+#: includes/crux.php:225
 msgid "Metric"
 msgstr ""
 
-#: includes/crux.php:220
+#: includes/crux.php:226
 msgid "Baseline"
 msgstr ""
 
-#: includes/crux.php:221
+#: includes/crux.php:227
 msgid "Latest"
 msgstr ""
 
-#: includes/crux.php:222
+#: includes/crux.php:228
 msgid "Change"
 msgstr ""
 
 #. translators: %s: date
-#: includes/crux.php:243
+#: includes/crux.php:249
 #, php-format
 msgid "Baseline captured: %s"
+msgstr ""
+
+#: includes/dashboard.php:27
+msgid "FetchPriority — Core Web Vitals"
+msgstr ""
+
+#: includes/dashboard.php:42
+msgid "Core Web Vitals"
+msgstr ""
+
+#: includes/dashboard.php:43
+msgid "Chrome UX Report"
+msgstr ""
+
+#: includes/dashboard.php:46
+msgid "Measure"
+msgstr ""
+
+#: includes/dashboard.php:55
+msgid "PageSpeed audit"
+msgstr ""
+
+#: includes/dashboard.php:56
+msgid "Lighthouse lab"
+msgstr ""
+
+#: includes/dashboard.php:64
+msgid "Run audit"
+msgstr ""
+
+#: includes/dashboard.php:72
+msgid "Open FetchPriority settings →"
 msgstr ""
 
 #: includes/lcp-store.php:106
@@ -733,50 +765,50 @@ msgstr ""
 msgid "Invalid URL."
 msgstr ""
 
-#: includes/psi.php:54
+#: includes/psi.php:87
 msgid "PageSpeed Insights request failed (try again — the API is rate-limited without a key)."
 msgstr ""
 
-#: includes/psi.php:143
+#: includes/psi.php:176
 msgid "No audit yet. Click \"Run PageSpeed audit\" to test a URL with Google Lighthouse."
 msgstr ""
 
-#: includes/psi.php:159
+#: includes/psi.php:192
 msgid "Performance"
 msgstr ""
 
-#: includes/psi.php:162
+#: includes/psi.php:195
 msgid "LCP:"
 msgstr ""
 
-#: includes/psi.php:164
+#: includes/psi.php:197
 msgid "Page weight:"
 msgstr ""
 
 #. translators: 1: strategy, 2: url
-#: includes/psi.php:171
+#: includes/psi.php:204
 #, php-format
 msgid "%1$s · %2$s"
 msgstr ""
 
-#: includes/psi.php:182
+#: includes/psi.php:215
 msgid "Google's detected LCP element:"
 msgstr ""
 
-#: includes/psi.php:190
+#: includes/psi.php:223
 msgid "Savings from modern formats (AVIF/WebP)"
 msgstr ""
 
-#: includes/psi.php:194
+#: includes/psi.php:227
 msgid "Savings from properly-sized images"
 msgstr ""
 
-#: includes/psi.php:198
+#: includes/psi.php:231
 msgid "Savings from image compression"
 msgstr ""
 
 #. translators: %s: date
-#: includes/psi.php:207
+#: includes/psi.php:240
 #, php-format
 msgid "Last run: %s"
 msgstr ""

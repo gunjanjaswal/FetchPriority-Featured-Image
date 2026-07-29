@@ -192,6 +192,9 @@ If you find this plugin useful, consider [supporting on Ko-fi](https://ko-fi.com
 
 ## Changelog
 
+### Version 1.6.0
+* **New:** Dashboard widget — the Core Web Vitals snapshot and the one-click PageSpeed audit are now available on the main WordPress dashboard (admins only), reusing your saved API key and stored results.
+
 ### Version 1.5.4
 * **Fix:** Core Web Vitals and PageSpeed requests now send the site URL as the `Referer`, so a Google API key restricted to your domain works from the server (previously blocked with "Requests from referer <empty> are blocked").
 * **Improved:** a failed *keyed* PageSpeed request now surfaces the key error (referrer / "API not enabled") instead of the misleading shared-quota message from the keyless fallback.

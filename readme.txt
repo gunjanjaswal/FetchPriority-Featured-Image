@@ -5,7 +5,7 @@ Donate link: https://ko-fi.com/gunjanjaswal
 Tags: performance, core-web-vitals, lcp, fetchpriority, image-optimization
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.5.4
+Stable tag: 1.6.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -29,6 +29,7 @@ FetchPriority Featured Image is a self-learning LCP (Largest Contentful Paint) o
 * Self-learning LCP detection from real-user field data (PerformanceObserver beacon), aggregated per template
 * Visual click-to-pick LCP element on the front end (admin-bar → "Pick LCP element")
 * Core Web Vitals before/after report via the Chrome UX Report (CrUX) API
+* Dashboard widget — run the Core Web Vitals report and PageSpeed audit straight from the WordPress dashboard
 * One-click PageSpeed Insights (Lighthouse) audit from the admin, showing the score, LCP, page weight, image-saving opportunities, and Google's own detected LCP element
 * Oversized-LCP detection — warns when your hero image is larger than it displays, with a recommended width
 * Slowest-templates leaderboard built from real-user LCP timing
@@ -110,6 +111,9 @@ View the HTML source and look for `fetchpriority="high"` on the hero image and a
 
 == Changelog ==
 
+= 1.6.0 =
+* NEW: Dashboard widget — the Core Web Vitals snapshot and the one-click PageSpeed audit are now available right on your WordPress dashboard, so you can measure without opening the settings screen. Admins only; it reuses your saved API key and the existing results.
+
 = 1.5.4 =
 * FIX: Core Web Vitals and PageSpeed requests now send your site URL as the referer, so a Google API key restricted to your domain (HTTP-referrer restriction) is accepted. Previously these server-side calls carried no referer and Google blocked them with "Requests from referer <empty> are blocked".
 * IMPROVED: When a PageSpeed request made with your key fails, the plugin now reports that key error (for example a referrer or "API not enabled" problem) instead of the misleading shared-quota message from its keyless fallback.
@@ -190,6 +194,9 @@ View the HTML source and look for `fetchpriority="high"` on the hero image and a
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.6.0 =
+Adds a dashboard widget for the Core Web Vitals report and PageSpeed audit, so both are one click from your WordPress dashboard.
 
 = 1.5.4 =
 Makes Core Web Vitals and PageSpeed work with a domain-restricted Google API key, and shows clearer errors when a key is rejected.

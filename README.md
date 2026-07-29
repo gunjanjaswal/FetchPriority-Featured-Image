@@ -192,6 +192,10 @@ If you find this plugin useful, consider [supporting on Ko-fi](https://ko-fi.com
 
 ## Changelog
 
+### Version 1.5.4
+* **Fix:** Core Web Vitals and PageSpeed requests now send the site URL as the `Referer`, so a Google API key restricted to your domain works from the server (previously blocked with "Requests from referer <empty> are blocked").
+* **Improved:** a failed *keyed* PageSpeed request now surfaces the key error (referrer / "API not enabled") instead of the misleading shared-quota message from the keyless fallback.
+
 ### Version 1.5.3
 * **Fix:** settings toggles showed a hard outline ring after a click (Chrome treats a toggle click as keyboard focus) — replaced with a soft focus glow.
 * **Fix:** the Export / Import buttons rendered their icon dropped to the bottom-left instead of beside the label — now a centered flex layout.

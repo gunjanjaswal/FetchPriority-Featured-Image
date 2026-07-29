@@ -46,7 +46,13 @@ function fpfi_psi_query($url, $strategy = 'mobile', $api_key = '')
             $query['key'] = trim($api_key);
         }
         $endpoint = add_query_arg($query, 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed');
-        return wp_remote_get($endpoint, array('timeout' => 60));
+        return wp_remote_get($endpoint, array(
+            'timeout' => 60,
+            // Send the site URL as the referer so an API key restricted to this
+            // domain (HTTP-referrer restriction) is accepted — a server request
+            // otherwise carries no referer and Google blocks it.
+            'headers' => array('Referer' => home_url('/')),
+        ));
     };
 
     $has_key = trim($api_key) !== '';
@@ -56,9 +62,13 @@ function fpfi_psi_query($url, $strategy = 'mobile', $api_key = '')
     $json = is_wp_error($resp) ? null : json_decode(wp_remote_retrieve_body($resp), true);
 
     // PSI is a lab test and works without a key at low volume. A key created only
-    // for the Chrome UX Report (very common) gets rejected here, so if the keyed
-    // request failed, fall back to a keyless one before giving up.
+    // for the Chrome UX Report (very common), or one that is referrer/IP restricted,
+    // gets rejected here — so if the keyed request failed, fall back to a keyless
+    // one before giving up. Keep the keyed error: it is far more actionable than
+    // the shared keyless quota message if the fallback also fails.
+    $keyed_error = '';
     if ($has_key && ($code !== 200 || empty($json['lighthouseResult']))) {
+        $keyed_error = isset($json['error']['message']) ? $json['error']['message'] : '';
         $resp = $run(false);
         $code = is_wp_error($resp) ? 0 : wp_remote_retrieve_response_code($resp);
         $json = is_wp_error($resp) ? null : json_decode(wp_remote_retrieve_body($resp), true);
@@ -69,6 +79,11 @@ function fpfi_psi_query($url, $strategy = 'mobile', $api_key = '')
     }
 
     if ($code !== 200 || empty($json['lighthouseResult'])) {
+        // Prefer the keyed error (e.g. "referer blocked", "API not enabled") over
+        // the keyless shared-quota error, which sends users down the wrong path.
+        if ($keyed_error !== '') {
+            return new WP_Error('psi_fail', $keyed_error);
+        }
         $msg = isset($json['error']['message']) ? $json['error']['message'] : __('PageSpeed Insights request failed (try again — the API is rate-limited without a key).', 'fetchpriority-featured-image');
         return new WP_Error('psi_fail', $msg);
     }

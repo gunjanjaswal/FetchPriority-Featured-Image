@@ -74,7 +74,13 @@ function fpfi_crux_query($api_key)
 
     $resp = wp_remote_post($endpoint, array(
         'timeout' => 15,
-        'headers' => array('Content-Type' => 'application/json'),
+        'headers' => array(
+            'Content-Type' => 'application/json',
+            // Send the site URL as the referer so an API key restricted to this
+            // domain works from the server (a server request carries no referer,
+            // which Google rejects with "Requests from referer <empty> are blocked").
+            'Referer'      => home_url('/'),
+        ),
         'body'    => wp_json_encode($body),
     ));
 

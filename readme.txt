@@ -5,7 +5,7 @@ Donate link: https://ko-fi.com/gunjanjaswal
 Tags: performance, core-web-vitals, lcp, fetchpriority, image-optimization
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.5.3
+Stable tag: 1.5.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -110,6 +110,10 @@ View the HTML source and look for `fetchpriority="high"` on the hero image and a
 
 == Changelog ==
 
+= 1.5.4 =
+* FIX: Core Web Vitals and PageSpeed requests now send your site URL as the referer, so a Google API key restricted to your domain (HTTP-referrer restriction) is accepted. Previously these server-side calls carried no referer and Google blocked them with "Requests from referer <empty> are blocked".
+* IMPROVED: When a PageSpeed request made with your key fails, the plugin now reports that key error (for example a referrer or "API not enabled" problem) instead of the misleading shared-quota message from its keyless fallback.
+
 = 1.5.3 =
 * FIX: The settings toggles showed a hard outline ring after you clicked them (Chrome treats a toggle click as keyboard focus), which looked like the control was stuck or broken. Replaced it with a soft focus glow.
 * FIX: The Export / Import buttons rendered their icon dropped into the bottom-left corner instead of next to the label. They now use a flex layout so the icon and text stay centered together.
@@ -186,6 +190,9 @@ View the HTML source and look for `fetchpriority="high"` on the hero image and a
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.5.4 =
+Makes Core Web Vitals and PageSpeed work with a domain-restricted Google API key, and shows clearer errors when a key is rejected.
 
 = 1.5.3 =
 Fixes the toggle focus ring and the Export/Import button icon alignment on the settings screen. Visual only.

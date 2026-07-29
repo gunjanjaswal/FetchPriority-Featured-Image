@@ -2,7 +2,7 @@
 # This file is distributed under the same license as the FetchPriority Featured Image plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: FetchPriority Featured Image 1.5.3\n"
+"Project-Id-Version: FetchPriority Featured Image 1.5.4\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/fetchpriority-featured-image\n"
 "POT-Creation-Date: 2026-07-28 09:37+0530\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"

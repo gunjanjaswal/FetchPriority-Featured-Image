@@ -192,76 +192,90 @@ If you find this plugin useful, consider [supporting on Ko-fi](https://ko-fi.com
 
 ## Changelog
 
+### Version 1.6.1
+- Tested and confirmed compatible with WordPress 7.1.4.
+
 ### Version 1.6.0
-* **New:** Dashboard widget — the Core Web Vitals snapshot and the one-click PageSpeed audit are now available on the main WordPress dashboard (admins only), reusing your saved API key and stored results.
+- NEW: Dashboard widget — the Core Web Vitals snapshot and the one-click PageSpeed audit are now available right on your WordPress dashboard, so you can measure without opening the settings screen. Admins only; it reuses your saved API key and the existing results.
 
 ### Version 1.5.4
-* **Fix:** Core Web Vitals and PageSpeed requests now send the site URL as the `Referer`, so a Google API key restricted to your domain works from the server (previously blocked with "Requests from referer <empty> are blocked").
-* **Improved:** a failed *keyed* PageSpeed request now surfaces the key error (referrer / "API not enabled") instead of the misleading shared-quota message from the keyless fallback.
+- FIX: Core Web Vitals and PageSpeed requests now send your site URL as the referer, so a Google API key restricted to your domain (HTTP-referrer restriction) is accepted. Previously these server-side calls carried no referer and Google blocked them with "Requests from referer <empty> are blocked".
+- IMPROVED: When a PageSpeed request made with your key fails, the plugin now reports that key error (for example a referrer or "API not enabled" problem) instead of the misleading shared-quota message from its keyless fallback.
 
 ### Version 1.5.3
-* **Fix:** settings toggles showed a hard outline ring after a click (Chrome treats a toggle click as keyboard focus) — replaced with a soft focus glow.
-* **Fix:** the Export / Import buttons rendered their icon dropped to the bottom-left instead of beside the label — now a centered flex layout.
+- FIX: The settings toggles showed a hard outline ring after you clicked them (Chrome treats a toggle click as keyboard focus), which looked like the control was stuck or broken. Replaced it with a soft focus glow.
+- FIX: The Export / Import buttons rendered their icon dropped into the bottom-left corner instead of next to the label. They now use a flex layout so the icon and text stay centered together.
 
 ### Version 1.5.2
-* **Improved:** redesigned the settings toggle switches — larger, shadowed knob, smooth slide animation, cleaner off state, and a proper keyboard focus ring. Visual only.
+- IMPROVED: Redesigned the settings toggle switches — larger, with a shadowed knob, a smooth slide animation, a cleaner off state, and a proper keyboard focus ring. Purely visual; no settings or behaviour changed.
 
 ### Version 1.5.1
-* **Fix:** the "Measure Core Web Vitals" and "Run PageSpeed audit" buttons (and "Clear learned data" / import / reset) did nothing when clicked — the admin script bound its handlers before the DOM was ready. Now wrapped in a ready callback.
-* **Improved:** PageSpeed audit falls back to a keyless request when a Google API key is rejected (e.g. a key enabled only for the Chrome UX Report).
-* **Improved:** CrUX / PageSpeed errors now render in the panel instead of a small status line, so messages like "no field data for this origin" on lower-traffic sites are visible.
+- FIX: The "Measure Core Web Vitals" and "Run PageSpeed audit" buttons (plus "Clear learned data" and the new import/reset controls) did nothing when clicked. The admin script bound its click handlers before the page had finished loading, so they never attached. Wrapped the script so it runs after the DOM is ready.
+- IMPROVED: PageSpeed audit now falls back to a keyless request if your Google API key is rejected — handy when the key was created only for the Chrome UX Report and doesn't have the PageSpeed Insights API enabled.
+- IMPROVED: CrUX and PageSpeed errors now show up in the panel itself instead of a small status line, so a "no field data for this origin" message (common on lower-traffic sites) is actually visible.
 
 ### Version 1.5.0
-* **WooCommerce** — the main image in the single-product gallery is now prioritized as the hero. Shop and product-category pages were already covered by the archive rules; this fills the one gap, since the gallery builds its own markup.
-* **Text-LCP web-font preload** — on pages where the largest element is text, the plugin learns the web font that text used and preloads it. Works with self-hosted fonts and Google Fonts, per template.
-* **Cross-origin CDN preconnect** — when the hero image or font lives on another host, an early `<link rel="preconnect">` (plus `dns-prefetch` fallback) is emitted for that exact host. Same-origin heroes emit nothing.
-* **Settings import/export** — save your configuration to a JSON file and load it on another site; learned data and the API key stay per-site. Plus a reset-to-defaults button.
-* **WP-CLI** — `wp fpfi lcp list`, `wp fpfi lcp reset`, and `wp fpfi settings-export/import/reset`.
-* **Translation template** — ships a full `.pot` so the plugin can be localised into any language.
+- NEW: WooCommerce support — the main image in the single-product gallery now gets prioritised as the hero. Shop and product-category pages were already covered by the archive rules; this fills the one gap, since the gallery builds its own markup. Toggle it under Targeting (shown only when WooCommerce is active).
+- NEW: Text-LCP font preload — on the many pages where the largest element is a heading or paragraph rather than an image, the plugin now learns which web font that text used and preloads it. Works with self-hosted fonts and Google Fonts, per template, from the same real-visitor measurements.
+- NEW: CDN preconnect — when your hero image or font lives on another host (an image CDN, Google Fonts), the plugin opens the connection early with `<link rel="preconnect">` plus a `dns-prefetch` fallback, matched to the exact cross-origin host. Same-origin heroes emit nothing.
+- NEW: Backup & migrate — export your settings to a JSON file and import them on another site. Great for rolling one tuned configuration across a fleet. Learned data and your API key stay per-site and are kept out of the file. There's also a "Reset to defaults" button.
+- NEW: WP-CLI — `wp fpfi lcp list`, `wp fpfi lcp reset`, and `wp fpfi settings-export/import/reset` for reading learned data and scripting deployments.
+- Full translation template (.pot) shipped so the plugin can be localised into any language via translate.wordpress.org or a tool like Poedit.
+- Friendlier template labels for WooCommerce (Product pages, Shop, Product categories) in the learning tables.
 
 ### Version 1.4.0
-* **Self-learning LCP** — a lightweight PerformanceObserver beacon reports the real LCP element per template; once enough samples land, the plugin auto-preloads and tags that exact image.
-* **CSS `background-image` hero support**, **visual LCP picker**, and a **Core Web Vitals before/after report** via the Chrome UX Report (CrUX) API.
-* **Per-template control** (Auto / Learned-only / Manual-only / Off), **PageSpeed audit** from the admin, **oversized-LCP detection**, and a **slowest-templates leaderboard**.
-* Loading optimization (`eager` on the hero, `lazy` below the fold) and a redesigned tabbed settings screen.
+- NEW: Self-learning LCP — a lightweight PerformanceObserver beacon reports the real Largest Contentful Paint element per template; once enough samples are collected the plugin auto-preloads and tags that exact image with `fetchpriority="high"`.
+- NEW: CSS `background-image` hero support — preloads the measured/manual background image, a blind spot for most performance plugins.
+- NEW: Visual LCP picker — open the front-end admin bar, click "Pick LCP element", click your hero, done. Saved as a manual override per template.
+- NEW: Core Web Vitals before/after report — connect a free Chrome UX Report (CrUX) API key to see real-world LCP, INP, and CLS, with a saved baseline to measure improvement.
+- NEW: Per-template control table — Auto / Learned-only / Manual-only / Off for every template the plugin has seen.
+- NEW: PageSpeed audit — run Google Lighthouse on any URL from the admin; see the performance score, LCP, page weight, image-saving opportunities, and Google's own detected LCP element to confirm correct targeting.
+- NEW: Oversized-LCP detection — compares the measured LCP image's real pixels against its displayed size and warns when you're serving wasted bytes, with a recommended width.
+- NEW: Loading optimization — forces `loading="eager"` on the LCP image and `loading="lazy"` on below-fold images so native lazy-loading never delays your hero.
+- NEW: Slowest-templates leaderboard — measured real-user LCP per template, sorted slowest first, as a built-in to-do list.
+- Video poster and `<picture>` heroes are supported as LCP targets via the learned/manual preload.
+- Configurable sampling rate for the measurement script to keep front-end overhead minimal.
+- Learned/manual targets supersede the featured-image guess for both preload and the `fetchpriority` tag.
+- Redesigned settings screen — tabbed (Smart LCP / Targeting / Preload / Diagnostics), card-based, flat interface with toggle controls and a sticky save bar.
+- Post-update notice highlighting what's new (shown to upgrading sites, not fresh installs).
 
 ### Version 1.3.0
-* Added Settings page under **Settings → FetchPriority** (Contexts / Preload / Below-fold / Exclusions / Theme preset / Debug).
-* Added per-context toggles: Single posts & pages, Blog home, Archives, Search results.
-* Added "First N posts on archives" setting (1–20) — previously hardcoded to first post only.
-* Added optional `<link rel="preload" as="image" fetchpriority="high">` for the featured image on singular pages.
-* Added AVIF / WebP sibling detection — extra `<link rel="preload" type="image/avif|image/webp">` tags emitted when modern variants exist on disk.
-* Added `fetchpriority="low"` for below-fold images (opt-in) — paired complement to the hero `high` tag.
-* Added theme presets with auto-detection: Astra, GeneratePress, Kadence, Divi, Hello Elementor.
-* Added Avatar / Gravatar exclusion to keep the priority budget on the real hero.
-* Added `fpfi_modern_format_variants` and `fpfi_excluded_classes` filters for extension.
-* Added admin-bar debug badge showing total tagged + how many got `high`.
-* Added Settings link to plugin action links on the Plugins screen.
-* Content filter rewritten with `preg_replace_callback` so the high/low budget is honored across **all** images in content, not just the first.
-* Author display name updated to "Gunjan Jaswal".
+- Added Settings page under Settings → FetchPriority (Contexts / Preload / Below-fold / Exclusions / Theme preset / Debug).
+- Added per-context toggles: Single posts & pages, Blog home, Archives, Search results.
+- Added "First N posts on archives" setting (1–20) — previously hardcoded to first post only.
+- Added optional `<link rel="preload" as="image" fetchpriority="high">` for the featured image on singular pages (strongest LCP signal).
+- Added AVIF / WebP detection — when a sibling modern-format file exists on disk, additional `<link rel="preload" type="image/avif|webp">` tags are emitted; browsers pick the supported variant automatically.
+- Added `fetchpriority="low"` for below-fold images (opt-in) as a paired complement to the hero `high` tag.
+- Added theme presets (Astra / GeneratePress / Kadence / Divi / Hello Elementor) with auto-detection — excludes theme logo & header classes so the priority budget hits the real hero.
+- Added Avatar / Gravatar exclusion to keep author avatars from consuming the priority budget.
+- Added admin-bar debug badge showing total tagged + how many were tagged `high`.
+- Added Settings link to plugin action links on the Plugins screen.
+- Content filter rewritten to use a `preg_replace_callback` walk so the high/low budget is honored across all images in the content, not only the first.
+- Cleaner reset logic on each request via `template_redirect`.
+- Author display name updated to "Gunjan Jaswal".
 
 ### Version 1.2.1
-* Updated "Tested up to" to WordPress 7.0.
-* Updated donation link to Ko-fi (https://ko-fi.com/gunjanjaswal).
-* Removed extraneous GITHUB_DESCRIPTION.md from plugin root for WordPress.org compliance.
+- Updated "Tested up to" to WordPress 7.0.
+- Updated donation link to Ko-fi (https://ko-fi.com/gunjanjaswal).
+- Removed extraneous GITHUB_DESCRIPTION.md from plugin root for WordPress.org compliance.
 
 ### Version 1.2.0
-* Added support for Divi theme and other page builders
-* Implemented `wp_get_attachment_image_attributes` filter for broader compatibility
-* Added content filter fallback to catch custom image implementations
-* Improved image detection across different theme rendering methods
-* Enhanced compatibility with themes that bypass standard WordPress image functions
+- Added support for Divi theme and Elementor page builder
+- Implemented `wp_get_attachment_image_attributes` filter for broader compatibility
+- Added content filter fallback to catch custom image implementations
+- Improved image detection across different theme rendering methods
+- Enhanced compatibility with themes that bypass standard WordPress image functions
 
 ### Version 1.1.0
-* Updated for WordPress 6.9 compatibility
-* Improved security with nonce verification for AJAX calls
-* Updated minimum PHP requirement to 7.4
-* Enhanced code quality and WordPress coding standards compliance
-* Added proper input sanitization and escaping
-* Aligns with WordPress 6.9's frontend performance improvements
+- Updated for WordPress 6.9 compatibility
+- Improved security with nonce verification for AJAX calls
+- Updated minimum PHP requirement to 7.4
+- Enhanced code quality and WordPress coding standards compliance
+- Added proper input sanitization and escaping
+- Aligns with WordPress 6.9's frontend performance improvements
 
 ### Version 1.0.0
-* Initial release
+- Initial release
 
 ## License
 

@@ -4,8 +4,8 @@ Contributors: gunjanjaswal
 Donate link: https://ko-fi.com/gunjanjaswal
 Tags: performance, core-web-vitals, lcp, fetchpriority, image-optimization
 Requires at least: 5.0
-Tested up to: 7.1
-Stable tag: 1.6.0
+Tested up to: 7.1.4
+Stable tag: 1.6.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -110,6 +110,9 @@ View the HTML source and look for `fetchpriority="high"` on the hero image and a
 5. Example of the fetchpriority attribute added to a featured image in HTML source.
 
 == Changelog ==
+
+= 1.6.1 =
+* Tested and confirmed compatible with WordPress 7.1.4.
 
 = 1.6.0 =
 * NEW: Dashboard widget — the Core Web Vitals snapshot and the one-click PageSpeed audit are now available right on your WordPress dashboard, so you can measure without opening the settings screen. Admins only; it reuses your saved API key and the existing results.
